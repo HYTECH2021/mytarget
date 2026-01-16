@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TrendingUp, Users, Euro, Package, MapPin } from 'lucide-react';
+import { TrendingUp, Users, Euro, Package, MapPin, Search } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
 interface CategoryStats {
@@ -17,6 +17,41 @@ interface DemographicStats {
   ageRange: string;
   count: number;
 }
+
+const DATA_STREAMS = [
+  {
+    label: 'Ricerche',
+    description: 'Intento, keyword e urgenza',
+    icon: Search,
+    accent: 'text-orange-400',
+    border: 'border-orange-500/30',
+    glow: 'from-orange-600/20 to-orange-500/5',
+  },
+  {
+    label: 'Budget',
+    description: 'Range di spesa dichiarato',
+    icon: Euro,
+    accent: 'text-emerald-400',
+    border: 'border-emerald-500/30',
+    glow: 'from-emerald-600/20 to-emerald-500/5',
+  },
+  {
+    label: 'Regione',
+    description: 'Città e micro-aree calde',
+    icon: MapPin,
+    accent: 'text-blue-400',
+    border: 'border-blue-500/30',
+    glow: 'from-blue-600/20 to-blue-500/5',
+  },
+  {
+    label: 'Età',
+    description: 'Fasce demografiche attive',
+    icon: Users,
+    accent: 'text-purple-400',
+    border: 'border-purple-500/30',
+    glow: 'from-purple-600/20 to-purple-500/5',
+  },
+] as const;
 
 export function MarketIntelligence() {
   const [categoryStats, setCategoryStats] = useState<CategoryStats[]>([]);
@@ -119,7 +154,7 @@ export function MarketIntelligence() {
             Market Intelligence
           </h2>
           <p className="text-slate-300 text-lg max-w-2xl">
-            Dati esclusivi sul comportamento d'acquisto. Accesso a insights che i tuoi competitor non hanno.
+            Dati esclusivi su ricerche, budget, regione ed età. Accesso a insights che i tuoi competitor non hanno.
           </p>
           <div className="mt-6 flex gap-6 text-sm">
             <div className="flex items-center gap-2">
@@ -132,6 +167,27 @@ export function MarketIntelligence() {
             </div>
           </div>
         </div>
+      </div>
+
+      <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        {DATA_STREAMS.map((stream) => {
+          const Icon = stream.icon;
+          return (
+            <div
+              key={stream.label}
+              className={`relative overflow-hidden rounded-3xl border ${stream.border} bg-gradient-to-br ${stream.glow} p-5`}
+            >
+              <div className="absolute inset-0 bg-slate-950/70 opacity-80" />
+              <div className="relative">
+                <div className={`w-10 h-10 rounded-2xl border ${stream.border} bg-slate-950/60 flex items-center justify-center mb-4`}>
+                  <Icon className={`w-5 h-5 ${stream.accent}`} />
+                </div>
+                <p className="text-sm font-bold text-white mb-1">{stream.label}</p>
+                <p className="text-xs text-slate-400">{stream.description}</p>
+              </div>
+            </div>
+          );
+        })}
       </div>
 
       <div className="grid md:grid-cols-3 gap-6 mb-8">
