@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { TrendingUp, MapPin, Euro, Package } from 'lucide-react';
 import { Logo } from './Logo';
 import { supabase } from '../lib/supabase';
-import type { RequestWithProfile } from '../lib/types';
+import type { TargetWithProfile } from '../lib/types';
 import { AuthModal } from './AuthModal';
 
 interface NicheLandingPageProps {
@@ -12,7 +12,7 @@ interface NicheLandingPageProps {
 }
 
 export function NicheLandingPage({ category, location, onGetStarted }: NicheLandingPageProps) {
-  const [requests, setRequests] = useState<RequestWithProfile[]>([]);
+  const [requests, setRequests] = useState<TargetWithProfile[]>([]);
   const [stats, setStats] = useState({ count: 0, avgBudget: 0 });
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authRole, setAuthRole] = useState<'buyer' | 'seller'>('seller');
