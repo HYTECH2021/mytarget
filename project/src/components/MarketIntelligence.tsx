@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import { TrendingUp, Users, Euro, Package, MapPin } from 'lucide-react';
 import { supabase } from '../lib/supabase';
+import { AGE_RANGES } from '../lib/types';
 
 interface CategoryStats {
   category: string;
@@ -82,24 +83,18 @@ export function MarketIntelligence() {
 
     const ageMap = new Map<string, number>();
     requests.forEach((req) => {
-      if (req.profile?.age) {
-        const age = req.profile.age;
-        let range = '';
-        if (age < 25) range = '18-24';
-        else if (age < 35) range = '25-34';
-        else if (age < 45) range = '35-44';
-        else if (age < 55) range = '45-54';
-        else range = '55+';
-        ageMap.set(range, (ageMap.get(range) || 0) + 1);
+      const ageRange = req.profile?.age_range;
+      if (ageRange) {
+        ageMap.set(ageRange, (ageMap.get(ageRange) || 0) + 1);
       }
     });
 
-    const demographicStatsData: DemographicStats[] = Array.from(ageMap.entries())
-      .map(([ageRange, count]) => ({ ageRange, count }))
-      .sort((a, b) => {
-        const order = ['18-24', '25-34', '35-44', '45-54', '55+'];
-        return order.indexOf(a.ageRange) - order.indexOf(b.ageRange);
-      });
+    const demographicStatsData: DemographicStats[] = AGE_RANGES
+      .map((range) => ({
+        ageRange: range,
+        count: ageMap.get(range) || 0,
+      }))
+      .filter((stat) => stat.count > 0);
     setDemographicStats(demographicStatsData);
   };
 

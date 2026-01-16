@@ -5,7 +5,7 @@ import { supabase } from '../lib/supabase';
 
 interface PendingCategory {
   id: string;
-  suggested_name: string;
+  name: string;
   status: string;
   suggested_by: string;
   created_at: string;
@@ -77,7 +77,7 @@ export function AdminPanel() {
       supabase.from('profiles').select('id', { count: 'exact', head: true }),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'buyer'),
       supabase.from('profiles').select('id', { count: 'exact', head: true }).eq('role', 'seller'),
-      supabase.from('pending_categories').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
+      supabase.from('category_suggestions').select('id', { count: 'exact', head: true }).eq('status', 'pending'),
     ]);
 
     setStats({
@@ -91,10 +91,10 @@ export function AdminPanel() {
 
   const loadPendingCategories = async () => {
     const { data, error } = await supabase
-      .from('pending_categories')
+      .from('category_suggestions')
       .select(`
         *,
-        suggester:profiles!pending_categories_suggested_by_fkey(full_name, city)
+        suggester:profiles!category_suggestions_suggested_by_fkey(full_name, city)
       `)
       .eq('status', 'pending')
       .order('created_at', { ascending: false });
@@ -181,7 +181,7 @@ export function AdminPanel() {
   };
 
   const handleApproveCategory = async (category: PendingCategory) => {
-    const slug = category.suggested_name
+    const slug = category.name
       .toLowerCase()
       .normalize('NFD')
       .replace(/[\u0300-\u036f]/g, '')
@@ -191,7 +191,7 @@ export function AdminPanel() {
     const { error: categoryError } = await supabase
       .from('categories')
       .insert({
-        name: category.suggested_name,
+        name: category.name,
         slug: slug,
         is_active: true,
       });
@@ -204,7 +204,7 @@ export function AdminPanel() {
     const { data: { user } } = await supabase.auth.getUser();
 
     const { error: updateError } = await supabase
-      .from('pending_categories')
+      .from('category_suggestions')
       .update({
         status: 'approved',
         reviewed_at: new Date().toISOString(),
@@ -223,7 +223,7 @@ export function AdminPanel() {
     const { data: { user } } = await supabase.auth.getUser();
 
     const { error } = await supabase
-      .from('pending_categories')
+      .from('category_suggestions')
       .update({
         status: 'rejected',
         reviewed_at: new Date().toISOString(),
@@ -376,7 +376,7 @@ export function AdminPanel() {
                       >
                         <div>
                           <h4 className="text-lg font-bold text-white mb-1">
-                            {category.suggested_name}
+                            {category.name}
                           </h4>
                           {category.suggester && (
                             <p className="text-sm text-slate-400">
