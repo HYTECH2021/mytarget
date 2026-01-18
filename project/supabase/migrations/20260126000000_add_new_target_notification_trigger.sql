@@ -37,28 +37,41 @@ BEGIN
     target_location := NEW.location;
     target_budget := NEW.budget;
 
-    -- Get Supabase configuration
-    supabase_url := current_setting('app.supabase_url', true);
-    anon_key := current_setting('app.supabase_anon_key', true);
+    -- Get Supabase URL from environment (set in Supabase Dashboard)
+    -- For Supabase, use the project URL directly
+    supabase_url := current_setting('app.settings.supabase_url', true);
+    
+    -- If not set, use a default pattern (will need to be configured)
+    IF supabase_url IS NULL OR supabase_url = '' THEN
+      -- Try to get from Supabase project settings
+      -- This should be configured in Supabase Dashboard → Settings → API
+      supabase_url := 'https://' || current_setting('app.settings.project_ref', true) || '.supabase.co';
+    END IF;
 
-    -- Call the Edge Function to notify sellers
-    -- Note: This is async and won't block the insert
-    PERFORM
-      net.http_post(
-        url := COALESCE(supabase_url, '') || '/functions/v1/notify-sellers-new-target',
-        headers := jsonb_build_object(
-          'Content-Type', 'application/json',
-          'Authorization', 'Bearer ' || COALESCE(anon_key, ''),
-          'apikey', COALESCE(anon_key, '')
-        ),
-        body := jsonb_build_object(
-          'target_id', NEW.id::text,
-          'target_title', target_title,
-          'category', target_category,
-          'location', target_location,
-          'budget', target_budget
-        )
-      );
+    -- Get anon key (should be set in Supabase Dashboard)
+    anon_key := current_setting('app.settings.supabase_anon_key', true);
+
+    -- Only proceed if we have the URL
+    IF supabase_url IS NOT NULL AND supabase_url != '' THEN
+      -- Call the Edge Function to notify sellers
+      -- Note: This is async and won't block the insert
+      PERFORM
+        net.http_post(
+          url := supabase_url || '/functions/v1/notify-sellers-new-target',
+          headers := jsonb_build_object(
+            'Content-Type', 'application/json',
+            'Authorization', 'Bearer ' || COALESCE(anon_key, ''),
+            'apikey', COALESCE(anon_key, '')
+          ),
+          body := jsonb_build_object(
+            'target_id', NEW.id::text,
+            'target_title', target_title,
+            'category', target_category,
+            'location', target_location,
+            'budget', target_budget
+          )
+        );
+    END IF;
   END IF;
 
   RETURN NEW;

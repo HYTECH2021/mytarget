@@ -52,13 +52,12 @@ serve(async (req) => {
     );
 
     // Find all sellers interested in this category
-    // Check sellers with primary_sector matching the category
+    // Check sellers with primary_sector matching the category or notifications enabled
     const { data: sellers, error: sellersError } = await supabaseAdmin
       .from('profiles')
-      .select('id, email, full_name, notifications_enabled')
+      .select('id, email, full_name, notifications_enabled, primary_sector')
       .eq('role', 'seller')
-      .eq('notifications_enabled', true) // Only notify sellers who have notifications enabled
-      .or(`primary_sector.eq.${category},primary_sector.is.null`); // Match by primary_sector or notify all if null
+      .eq('notifications_enabled', true); // Only notify sellers who have notifications enabled
 
     if (sellersError) {
       console.error("Error fetching sellers:", sellersError);
@@ -70,6 +69,13 @@ serve(async (req) => {
         }
       );
     }
+
+    // Filter sellers by category match (primary_sector matches category or is null/all)
+    const interestedSellers = sellers?.filter(seller => 
+      !seller.primary_sector || 
+      seller.primary_sector === category ||
+      seller.primary_sector === ''
+    ) || [];
 
     if (interestedSellers.length === 0) {
       return new Response(
