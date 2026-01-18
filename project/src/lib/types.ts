@@ -40,7 +40,7 @@ export interface Database {
   };
 }
 
-export type UserRole = 'buyer' | 'seller';
+export type UserRole = 'buyer' | 'seller' | 'admin';
 export type Gender = 'Maschio' | 'Femmina' | 'Altro/Non specificato';
 export type AgeRange = '18-25' | '26-35' | '36-45' | '46-55' | '56-65' | '66+';
 
@@ -61,6 +61,8 @@ export interface Profile {
   // Campi per Buyer e Seller Individual
   gender: Gender | null;
   age_range: AgeRange | null;
+  // Subscription level (synced from subscriptions table)
+  subscription_level?: SubscriptionPlan;
   created_at: string;
   updated_at: string;
 }
@@ -129,7 +131,7 @@ export interface Offer {
   updated_at: string;
 }
 
-export type SubscriptionPlan = 'free' | 'pro' | 'enterprise';
+export type SubscriptionPlan = 'free' | 'plus' | 'pro' | 'enterprise';
 export type SubscriptionStatus = 'active' | 'cancelled' | 'expired';
 
 export interface Subscription {

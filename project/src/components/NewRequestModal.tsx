@@ -1,9 +1,11 @@
 import { useState, useEffect } from 'react';
 import { X, Loader2, Plus } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import type { CategoryData } from '../lib/types';
 import { PhotoUpload } from './PhotoUpload';
+import { AIAssistant } from './AIAssistant';
 
 interface NewRequestModalProps {
   onClose: () => void;
@@ -11,6 +13,7 @@ interface NewRequestModalProps {
 }
 
 export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
+  const { t } = useTranslation();
   const { profile } = useAuth();
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -96,7 +99,7 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
       <div className="bg-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-y-auto border border-slate-800">
         <div className="p-6 border-b border-slate-800 flex items-center justify-between sticky top-0 bg-slate-900 z-10">
-          <h2 className="text-2xl font-bold text-white">Nuova Richiesta</h2>
+          <h2 className="text-2xl font-bold text-white">{t('nuovaRichiesta')}</h2>
           <button
             onClick={onClose}
             className="text-slate-400 hover:text-white transition-colors"
@@ -108,7 +111,7 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Cosa stai cercando? *
+              {t('cosaCercando')} *
             </label>
             <input
               type="text"
@@ -118,11 +121,28 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
               className="w-full px-4 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent"
               placeholder="Es: iPhone 15 Pro Max usato"
             />
+            <AIAssistant
+              userInput={formData.title}
+              onCategorySuggest={(category) => {
+                // Cerca se la categoria esiste già, altrimenti suggeriscila come custom
+                const existingCategory = categories.find(cat => cat.name.toLowerCase() === category.toLowerCase());
+                if (existingCategory) {
+                  setFormData({ ...formData, category: existingCategory.name });
+                  setShowCustomCategory(false);
+                } else {
+                  setShowCustomCategory(true);
+                  setCustomCategory(category);
+                }
+              }}
+              onBudgetSuggest={(budget) => {
+                setFormData({ ...formData, budget });
+              }}
+            />
           </div>
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Categoria *
+              {t('categoria')} *
             </label>
             {!showCustomCategory ? (
               <>
@@ -217,10 +237,10 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
             </p>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+            <div className="grid grid-cols-2 gap-4">
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Budget (€)
+                {t('budget')} (€)
               </label>
               <input
                 type="number"
@@ -234,7 +254,7 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
 
             <div>
               <label className="block text-sm font-medium text-slate-300 mb-2">
-                Località *
+                {t('localita')} *
               </label>
               <input
                 type="text"
@@ -259,7 +279,7 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
               onClick={onClose}
               className="flex-1 py-3 rounded-2xl border border-slate-700 text-slate-300 font-semibold hover:bg-slate-800 transition-colors"
             >
-              Annulla
+              {t('annulla')}
             </button>
             <button
               type="submit"
@@ -267,7 +287,7 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
               className="flex-1 py-3 rounded-2xl bg-orange-600 text-white font-semibold hover:bg-orange-700 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center gap-2"
             >
               {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-              Pubblica Richiesta
+              {t('pubblicaRichiesta')}
             </button>
           </div>
         </form>

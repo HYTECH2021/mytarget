@@ -15,18 +15,24 @@ export function useIsAdmin() {
     }
 
     const checkAdmin = async () => {
-      const { data, error } = await supabase
-        .from('admin_users')
-        .select('user_id')
-        .eq('user_id', user.id)
-        .maybeSingle();
+      // Check both admin_users table and profile role
+      const [adminUserRes, profileRes] = await Promise.all([
+        supabase
+          .from('admin_users')
+          .select('user_id')
+          .eq('user_id', user.id)
+          .maybeSingle(),
+        supabase
+          .from('profiles')
+          .select('role')
+          .eq('id', user.id)
+          .maybeSingle(),
+      ]);
 
-      if (error) {
-        console.error('Error checking admin status:', error);
-        setIsAdmin(false);
-      } else {
-        setIsAdmin(!!data);
-      }
+      const isAdminUser = !!adminUserRes.data;
+      const isAdminRole = profileRes.data?.role === 'admin';
+
+      setIsAdmin(isAdminUser || isAdminRole);
       setLoading(false);
     };
 

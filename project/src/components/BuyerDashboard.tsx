@@ -7,7 +7,7 @@ import type { Target, OfferWithDetails } from '../lib/types';
 import { CATEGORIES } from '../lib/types';
 import { NewRequestModal } from './NewRequestModal';
 import { NotificationSystem } from './NotificationSystem';
-import { ChatInterface } from './ChatInterface';
+import { PrivateChat } from './PrivateChat';
 import { Footer } from './Footer';
 
 interface BuyerDashboardProps {
@@ -23,7 +23,14 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
   const [loading, setLoading] = useState(true);
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [activeTab, setActiveTab] = useState<'targets' | 'offers'>('targets');
-  const [selectedChat, setSelectedChat] = useState<{ conversationId: string; otherParty: string; target: string } | null>(null);
+  const [selectedChat, setSelectedChat] = useState<{ 
+    conversationId: string; 
+    targetId: string;
+    buyerId: string;
+    sellerId: string;
+    otherParty: string; 
+    target: string;
+  } | null>(null);
 
   useEffect(() => {
     if (isGuest) {
@@ -360,6 +367,8 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
                     </span>
                     <button
                       onClick={async () => {
+                        if (!profile) return;
+                        
                         const { data: conversation } = await supabase
                           .from('conversations')
                           .select('id')
@@ -370,6 +379,9 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
                         if (conversation) {
                           setSelectedChat({
                             conversationId: conversation.id,
+                            targetId: offer.target_id,
+                            buyerId: profile.id,
+                            sellerId: offer.seller_id,
                             otherParty: offer.seller.full_name,
                             target: offer.target.title
                           });
@@ -378,7 +390,7 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
                             .from('conversations')
                             .insert({
                               target_id: offer.target_id,
-                              buyer_id: profile?.id,
+                              buyer_id: profile.id,
                               seller_id: offer.seller_id
                             })
                             .select()
@@ -387,6 +399,9 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
                           if (newConv) {
                             setSelectedChat({
                               conversationId: newConv.id,
+                              targetId: offer.target_id,
+                              buyerId: profile.id,
+                              sellerId: offer.seller_id,
                               otherParty: offer.seller.full_name,
                               target: offer.target.title
                             });
@@ -396,7 +411,7 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
                       className="px-6 py-2 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all text-sm flex items-center gap-2 hover:scale-105 active:scale-95"
                     >
                       <MessageCircle className="w-4 h-4" />
-                      Avvia Chat
+                      Chatta con venditore
                     </button>
                   </div>
                 </div>
@@ -417,8 +432,11 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
       )}
 
       {selectedChat && (
-        <ChatInterface
+        <PrivateChat
           conversationId={selectedChat.conversationId}
+          targetId={selectedChat.targetId}
+          buyerId={selectedChat.buyerId}
+          sellerId={selectedChat.sellerId}
           otherPartyName={selectedChat.otherParty}
           targetTitle={selectedChat.target}
           onClose={() => setSelectedChat(null)}

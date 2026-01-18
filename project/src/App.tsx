@@ -10,6 +10,10 @@ import { PrivacyPolicy } from './pages/PrivacyPolicy';
 import { CookiePolicy } from './pages/CookiePolicy';
 import { TerminiCondizioni } from './pages/TerminiCondizioni';
 import { Contatti } from './pages/Contatti';
+import { AdminDashboard } from './pages/AdminDashboard';
+import { StatsDashboard } from './pages/StatsDashboard';
+import { Pricing } from './pages/Pricing';
+import { Success } from './pages/Success';
 import type { UserRole } from './lib/types';
 
 function AppContent() {
@@ -46,7 +50,7 @@ function AppContent() {
     setShowAuthModal(true);
   };
 
-  // Gestione routing per pagine legali
+  // Gestione routing per pagine legali e admin
   if (currentPath === '/privacy') {
     return <PrivacyPolicy />;
   }
@@ -61,6 +65,26 @@ function AppContent() {
   
   if (currentPath === '/contatti') {
     return <Contatti />;
+  }
+
+  // Admin dashboard route
+  if (currentPath === '/admin' || currentPath.startsWith('/admin/')) {
+    return <AdminDashboard />;
+  }
+
+  // Stats dashboard route
+  if (currentPath === '/stats' || currentPath.startsWith('/stats/')) {
+    return <StatsDashboard />;
+  }
+
+  // Pricing page route
+  if (currentPath === '/pricing') {
+    return <Pricing />;
+  }
+
+  // Success page route (after Stripe checkout)
+  if (currentPath === '/success') {
+    return <Success />;
   }
 
   if (error) {

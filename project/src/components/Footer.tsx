@@ -1,7 +1,9 @@
 import { Shield } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Logo from './Logo';
 
 export function Footer() {
+  const { t } = useTranslation();
   return (
     <footer className="border-t border-slate-800/50 bg-slate-950/90 backdrop-blur-xl mt-20">
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
@@ -32,23 +34,29 @@ export function Footer() {
 
         <div className="mt-6 pt-6 border-t border-slate-900 text-center">
           <p className="text-xs text-slate-600 leading-relaxed mb-4">
-            Smetti di cercare. <span className="text-orange-500 font-bold">Fatti trovare.</span>
+            {t('footerSlogan').includes('<bold>') ? (
+              <>
+                {t('footerSlogan').split('<bold>')[0]} <span className="text-orange-500 font-bold">{t('footerSlogan').split('<bold>')[1]?.replace('</bold>', '')}</span>
+              </>
+            ) : (
+              t('footerSlogan')
+            )}
           </p>
           <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500">
             <a href="/privacy" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
-              Privacy Policy
+              {t('privacyPolicy')}
             </a>
             <span className="text-slate-700">|</span>
             <a href="/cookie-policy" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
-              Cookie Policy
+              {t('cookiePolicy')}
             </a>
             <span className="text-slate-700">|</span>
             <a href="/termini" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
-              Termini e Condizioni d'uso
+              {t('terminiCondizioni')}
             </a>
             <span className="text-slate-700">|</span>
             <a href="/contatti" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
-              Contatti
+              {t('contatti')}
             </a>
           </div>
         </div>

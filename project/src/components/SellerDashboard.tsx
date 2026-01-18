@@ -11,7 +11,7 @@ import { AdminPanel } from './AdminPanel';
 import { useIsAdmin } from '../hooks/useIsAdmin';
 import { useSubscription } from '../hooks/useSubscription';
 import { NotificationSystem } from './NotificationSystem';
-import { ChatInterface } from './ChatInterface';
+import { PrivateChat } from './PrivateChat';
 import { Footer } from './Footer';
 
 type ViewMode = 'feed' | 'conversations' | 'subscriptions' | 'analytics' | 'admin';
@@ -49,7 +49,14 @@ export function SellerDashboard({ isGuest = false, onAuthRequired, onBack }: Sel
   const [selectedTarget, setSelectedTarget] = useState<TargetWithProfile | null>(null);
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [unlockedLeads, setUnlockedLeads] = useState<Set<string>>(new Set());
-  const [selectedChat, setSelectedChat] = useState<{ conversationId: string; otherParty: string; target: string } | null>(null);
+  const [selectedChat, setSelectedChat] = useState<{ 
+    conversationId: string;
+    targetId: string;
+    buyerId: string;
+    sellerId: string;
+    otherParty: string; 
+    target: string;
+  } | null>(null);
   const [conversations, setConversations] = useState<ConversationWithDetails[]>([]);
   const [filters, setFilters] = useState({
     category: 'Tutte',
@@ -510,8 +517,12 @@ export function SellerDashboard({ isGuest = false, onAuthRequired, onBack }: Sel
                   key={conversation.id}
                   className="group bg-slate-900/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 hover:border-orange-600/50 transition-all hover:bg-slate-900/70 hover:scale-[1.01] cursor-pointer"
                   onClick={() => {
+                    if (!profile) return;
                     setSelectedChat({
                       conversationId: conversation.id,
+                      targetId: conversation.target_id,
+                      buyerId: conversation.buyer_id,
+                      sellerId: profile.id,
                       otherParty: conversation.buyer.full_name,
                       target: conversation.target.title
                     });
@@ -551,6 +562,70 @@ export function SellerDashboard({ isGuest = false, onAuthRequired, onBack }: Sel
                       </div>
                     </div>
                     <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        if (!profile) return;
+                        setSelectedChat({
+                          conversationId: conversation.id,
+                          targetId: conversation.target_id,
+                          buyerId: conversation.buyer_id,
+                          sellerId: profile.id,
+                          otherParty: conversation.buyer.full_name,
+                          target: conversation.target.title
+                        });
+                      }}
+                      className="px-6 py-2 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all text-sm flex items-center gap-2 hover:scale-105 active:scale-95"
+                    >
+                      <MessageCircle className="w-4 h-4" />
+                      Chatta con buyer
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {!isGuest && viewMode === 'subscriptions' && (
+          <SubscriptionPlans
+            currentPlan={subscription?.plan || 'free'}
+            onUpgrade={upgradePlan}
+          />
+        )}
+
+        {!isGuest && viewMode === 'analytics' && canAccessAnalytics && <MarketIntelligence />}
+
+        {!isGuest && viewMode === 'admin' && isAdmin && <AdminPanel />}
+      </div>
+
+      {!isGuest && selectedTarget && (
+        <SendOfferModal
+          target={selectedTarget}
+          onClose={() => setSelectedTarget(null)}
+          onSuccess={() => {
+            setSelectedTarget(null);
+            loadTargets();
+          }}
+        />
+      )}
+
+      {selectedChat && (
+        <PrivateChat
+          conversationId={selectedChat.conversationId}
+          targetId={selectedChat.targetId}
+          buyerId={selectedChat.buyerId}
+          sellerId={selectedChat.sellerId}
+          otherPartyName={selectedChat.otherParty}
+          targetTitle={selectedChat.target}
+          onClose={() => setSelectedChat(null)}
+        />
+      )}
+
+      <Footer />
+    </div>
+  );
+}
+
                       onClick={(e) => {
                         e.stopPropagation();
                         setSelectedChat({
@@ -595,8 +670,11 @@ export function SellerDashboard({ isGuest = false, onAuthRequired, onBack }: Sel
       )}
 
       {selectedChat && (
-        <ChatInterface
+        <PrivateChat
           conversationId={selectedChat.conversationId}
+          targetId={selectedChat.targetId}
+          buyerId={selectedChat.buyerId}
+          sellerId={selectedChat.sellerId}
           otherPartyName={selectedChat.otherParty}
           targetTitle={selectedChat.target}
           onClose={() => setSelectedChat(null)}

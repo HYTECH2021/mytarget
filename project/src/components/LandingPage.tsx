@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 import { Crosshair, TrendingUp, Sparkles, Zap, Users, BarChart3 } from 'lucide-react';
+import { useTranslation } from 'react-i18next';
 import Logo from './Logo';
 import { Footer } from './Footer';
+import { LanguageSelector } from './LanguageSelector';
 
 interface LandingPageProps {
   onGetStarted: (role: 'buyer' | 'seller') => void;
@@ -36,6 +38,7 @@ const AI_REFINEMENT_TEMPLATES: Record<string, any> = {
 };
 
 export function LandingPage({ onGetStarted, onGuestMode }: LandingPageProps) {
+  const { t } = useTranslation();
   const [aiInput, setAiInput] = useState('');
   const [aiOutput, setAiOutput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
@@ -93,12 +96,13 @@ export function LandingPage({ onGetStarted, onGuestMode }: LandingPageProps) {
       <nav className="border-b border-slate-200 bg-white/90 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <Logo size={48} showText={true} blackBg={false} />
-          <div className="flex gap-4">
+          <div className="flex gap-4 items-center">
+            <LanguageSelector />
             <button
               onClick={() => onGetStarted('buyer')}
               className="px-8 py-3 rounded-3xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95"
             >
-              Accedi
+              {t('accedi')}
             </button>
           </div>
         </div>
@@ -114,14 +118,14 @@ export function LandingPage({ onGetStarted, onGuestMode }: LandingPageProps) {
           </div>
 
           <h1 className="text-7xl md:text-9xl font-black text-slate-900 mb-6 leading-none tracking-tighter">
-            PUNTA.
+            {t('heroTitle').split(' ')[0]}.
             <br />
             <span className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent">
-              ACQUISISCI.
+              {t('heroTitle').split(' ')[1]}.
             </span>
           </h1>
           <p className="text-2xl md:text-3xl text-slate-600 mb-8 max-w-4xl mx-auto font-light leading-relaxed">
-            Smetti di cercare. <span className="text-orange-600 font-bold">Fatti trovare.</span>
+            {t('heroSubtitle').split('. ')[0]}. <span className="text-orange-600 font-bold">{t('heroSubtitle').split('. ')[1]}.</span>
           </p>
           <p className="text-lg text-slate-500 mb-16 max-w-3xl mx-auto leading-relaxed">
             Da preda a cacciatore: pubblica il tuo obiettivo e lascia che le aziende competano per te. Precisione millimetrica. Risultati garantiti.
