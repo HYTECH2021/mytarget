@@ -19,6 +19,8 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
   const [successMessage, setSuccessMessage] = useState<string | null>(null);
   const [acceptTerms, setAcceptTerms] = useState(false);
   const [termsError, setTermsError] = useState<string | null>(null);
+  const [emailError, setEmailError] = useState<string | null>(null);
+  const [phoneError, setPhoneError] = useState<string | null>(null);
   const { signIn, signUp } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -132,7 +134,7 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
     }
   };
 
-  const roleColor = role === 'buyer' ? 'blue' : 'orange';
+  // roleColor non è usato, rimosso per evitare warning
 
   return (
     <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
