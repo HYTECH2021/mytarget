@@ -14,6 +14,8 @@ import { AdminDashboard } from './pages/AdminDashboard';
 import { StatsDashboard } from './pages/StatsDashboard';
 import { Pricing } from './pages/Pricing';
 import { Success } from './pages/Success';
+import { GlobalAIAssistant } from './components/GlobalAIAssistant';
+import { NotificationConsent } from './components/NotificationConsent';
 import type { UserRole } from './lib/types';
 
 function AppContent() {
@@ -166,6 +168,9 @@ function AppContent() {
     window.location.href = '/';
   };
 
+  // Show notification consent if notifications_enabled is null (first time user)
+  const showNotificationConsent = profile.notifications_enabled === null;
+
   return (
     <>
       {profile.role === 'buyer' ? (
@@ -174,6 +179,14 @@ function AppContent() {
         <SellerDashboard onBack={handleBackToLanding} />
       )}
       <SupportChat />
+      <GlobalAIAssistant />
+      {showNotificationConsent && (
+        <NotificationConsent
+          onComplete={() => {
+            // Component will refresh profile automatically
+          }}
+        />
+      )}
     </>
   );
 }

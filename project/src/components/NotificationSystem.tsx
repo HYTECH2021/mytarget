@@ -2,6 +2,7 @@ import { useEffect, useState } from 'react';
 import { Bell, MessageCircle, Target, TrendingUp, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
+import { registerServiceWorker, subscribeToPush } from '../utils/pushNotifications';
 
 interface Notification {
   id: string;
@@ -12,11 +13,42 @@ interface Notification {
   read: boolean;
 }
 
+// Helper function to get user target IDs (will be populated by component)
+let userTargetIds: string[] = [];
+
+function getUserTargetIds(userId: string): string {
+  return userTargetIds.join(',') || 'null';
+}
+
 export function NotificationSystem() {
-  const { profile } = useAuth();
+  const { profile, user } = useAuth();
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [showPanel, setShowPanel] = useState(false);
   const [unreadCount, setUnreadCount] = useState(0);
+
+  // Load user target IDs and initialize push notifications
+  useEffect(() => {
+    if (!profile || !user) return;
+
+    // Load target IDs for buyer
+    if (profile.role === 'buyer') {
+      supabase
+        .from('targets')
+        .select('id')
+        .eq('user_id', user.id)
+        .eq('status', 'active')
+        .then(({ data }) => {
+          if (data) {
+            userTargetIds = data.map((t) => t.id);
+          }
+        });
+    }
+
+    // Register service worker and subscribe to push if notifications enabled
+    if (profile.notifications_enabled) {
+      initializePushNotifications(user.id);
+    }
+  }, [profile, user]);
 
   useEffect(() => {
     if (!profile) return;
@@ -49,19 +81,77 @@ export function NotificationSystem() {
           event: 'INSERT',
           schema: 'public',
           table: 'offers',
+          filter: `target_id=in.(${getUserTargetIds(profile.id)})`, // Only notify for buyer's targets
         },
-        (payload: any) => {
-          addNotification({
-            id: payload.new.id,
-            type: 'offer',
-            title: 'Nuova Offerta',
-            message: 'Hai ricevuto una nuova offerta per il tuo target',
-            timestamp: new Date(payload.new.created_at),
-            read: false
-          });
+        async (payload: any) => {
+          // Check if offer is for this buyer's target
+          const { data: targetData } = await supabase
+            .from('targets')
+            .select('user_id')
+            .eq('id', payload.new.target_id)
+            .maybeSingle();
+
+          if (targetData && targetData.user_id === profile.id) {
+            addNotification({
+              id: payload.new.id,
+              type: 'offer',
+              title: 'Nuova Offerta',
+              message: 'Hai ricevuto una nuova offerta per il tuo target',
+              timestamp: new Date(payload.new.created_at),
+              read: false
+            });
+
+            // Send Web Push notification if enabled
+            await sendPushNotification({
+              title: 'Nuova Offerta',
+              body: 'Nuova offerta disponibile. Clicca per vedere i dettagli.',
+              url: `/?offer=${payload.new.id}`,
+            });
+          }
         }
-      )
-      .subscribe();
+      );
+
+    // Subscribe to new targets for sellers
+    if (profile.role === 'seller' && profile.notifications_enabled) {
+      messageChannel.on(
+        'postgres_changes',
+        {
+          event: 'INSERT',
+          schema: 'public',
+          table: 'targets',
+          filter: 'status=eq.active',
+        },
+        async (payload: any) => {
+          const newTarget = payload.new;
+          
+          // Check if seller is interested in this category
+          // Match by primary_sector or notify all if primary_sector is null
+          const isInterested = !profile.primary_sector || 
+                              profile.primary_sector === newTarget.category ||
+                              profile.primary_sector === '';
+
+          if (isInterested) {
+            addNotification({
+              id: newTarget.id,
+              type: 'target',
+              title: 'Nuova Opportunità',
+              message: `Nuova opportunità nella categoria ${newTarget.category}!`,
+              timestamp: new Date(newTarget.created_at),
+              read: false
+            });
+
+            // Send Web Push notification
+            await sendPushNotification({
+              title: 'Nuovo Target rilevato',
+              body: `Nuovo Target rilevato: ${newTarget.category}. Clicca per rispondere.`,
+              url: `/?target=${newTarget.id}`,
+            });
+          }
+        }
+      );
+    }
+
+    messageChannel.subscribe();
 
     return () => {
       messageChannel.unsubscribe();
@@ -72,13 +162,41 @@ export function NotificationSystem() {
     setUnreadCount(notifications.filter(n => !n.read).length);
   }, [notifications]);
 
+  // Initialize push notifications
+  const initializePushNotifications = async (userId: string) => {
+    try {
+      const registration = await registerServiceWorker();
+      if (registration) {
+        await subscribeToPush(registration, userId);
+      }
+    } catch (error) {
+      console.error('Error initializing push notifications:', error);
+    }
+  };
+
+  // Send push notification via service worker
+  const sendPushNotification = async (data: { title: string; body: string; url?: string }) => {
+    if ('serviceWorker' in navigator && 'PushManager' in window) {
+      const registration = await navigator.serviceWorker.ready;
+      registration.showNotification(data.title, {
+        body: data.body,
+        icon: '/target-icon.png',
+        badge: '/target-icon.png',
+        tag: 'new-offer',
+        data: data.url || '/',
+      });
+    }
+  };
+
   const addNotification = (notification: Notification) => {
     setNotifications(prev => [notification, ...prev]);
 
+    // Also show browser notification if permission granted
     if ('Notification' in window && Notification.permission === 'granted') {
       new Notification(notification.title, {
         body: notification.message,
-        icon: '/target-icon.png'
+        icon: '/target-icon.png',
+        badge: '/target-icon.png',
       });
     }
   };
@@ -101,6 +219,8 @@ export function NotificationSystem() {
         return <TrendingUp className="w-5 h-5 text-green-400" />;
       case 'target':
         return <Target className="w-5 h-5 text-orange-400" />;
+      case 'opportunity':
+        return <TrendingUp className="w-5 h-5 text-orange-400" />;
       default:
         return <Bell className="w-5 h-5 text-slate-400" />;
     }

@@ -259,10 +259,10 @@ export function SellerDashboard({ isGuest = false, onAuthRequired, onBack }: Sel
         </div>
 
         {!isGuest && (
-          <div className="flex gap-4 mb-6 border-b border-slate-800/50">
+          <div className="flex gap-2 sm:gap-4 mb-6 border-b border-slate-800/50 overflow-x-auto scrollbar-hide">
             <button
               onClick={() => setViewMode('feed')}
-              className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
+              className={`px-3 sm:px-6 py-3 sm:py-4 font-bold transition-all relative flex items-center gap-1.5 sm:gap-2 whitespace-nowrap text-sm sm:text-base ${
                 viewMode === 'feed' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
               }`}
             >
@@ -578,66 +578,6 @@ export function SellerDashboard({ isGuest = false, onAuthRequired, onBack }: Sel
                     >
                       <MessageCircle className="w-4 h-4" />
                       Chatta con buyer
-                    </button>
-                  </div>
-                </div>
-              ))
-            )}
-          </div>
-        )}
-
-        {!isGuest && viewMode === 'subscriptions' && (
-          <SubscriptionPlans
-            currentPlan={subscription?.plan || 'free'}
-            onUpgrade={upgradePlan}
-          />
-        )}
-
-        {!isGuest && viewMode === 'analytics' && canAccessAnalytics && <MarketIntelligence />}
-
-        {!isGuest && viewMode === 'admin' && isAdmin && <AdminPanel />}
-      </div>
-
-      {!isGuest && selectedTarget && (
-        <SendOfferModal
-          target={selectedTarget}
-          onClose={() => setSelectedTarget(null)}
-          onSuccess={() => {
-            setSelectedTarget(null);
-            loadTargets();
-          }}
-        />
-      )}
-
-      {selectedChat && (
-        <PrivateChat
-          conversationId={selectedChat.conversationId}
-          targetId={selectedChat.targetId}
-          buyerId={selectedChat.buyerId}
-          sellerId={selectedChat.sellerId}
-          otherPartyName={selectedChat.otherParty}
-          targetTitle={selectedChat.target}
-          onClose={() => setSelectedChat(null)}
-        />
-      )}
-
-      <Footer />
-    </div>
-  );
-}
-
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        setSelectedChat({
-                          conversationId: conversation.id,
-                          otherParty: conversation.buyer.full_name,
-                          target: conversation.target.title
-                        });
-                      }}
-                      className="ml-4 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30 flex items-center gap-2"
-                    >
-                      <MessageCircle className="w-5 h-5" />
-                      Apri Chat
                     </button>
                   </div>
                 </div>

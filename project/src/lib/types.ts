@@ -47,11 +47,14 @@ export type AgeRange = '18-25' | '26-35' | '36-45' | '46-55' | '56-65' | '66+';
 export interface Profile {
   id: string;
   email: string;
+  phone_number: string | null;
   full_name: string;
   city: string;
   profession: string | null;
   role: UserRole;
   fonte_acquisizione: string | null;
+  // Notifiche
+  notifications_enabled: boolean | null;
   // Campi per Seller
   seller_type: 'business' | 'individual' | null;
   // Campi per Seller Business
@@ -120,6 +123,15 @@ export interface Target {
 
 export type OfferStatus = 'pending' | 'accepted' | 'rejected';
 
+export interface OfferAttachment {
+  id: string;
+  name: string;
+  type: string;
+  size: number;
+  url: string;
+  uploaded_at: string;
+}
+
 export interface Offer {
   id: string;
   target_id: string;
@@ -127,6 +139,7 @@ export interface Offer {
   message: string;
   proposed_price: number | null;
   status: OfferStatus;
+  attachments?: OfferAttachment[] | null;
   created_at: string;
   updated_at: string;
 }

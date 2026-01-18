@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { Target as TargetIcon, MapPin, Euro, Crosshair, Mail, LogOut, TrendingUp, MessageCircle, LogIn, ArrowLeft } from 'lucide-react';
+import { Target as TargetIcon, MapPin, Euro, Crosshair, Mail, LogOut, TrendingUp, MessageCircle, LogIn, ArrowLeft, FileText, Image, File, Download, Eye } from 'lucide-react';
 import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -9,6 +9,7 @@ import { NewRequestModal } from './NewRequestModal';
 import { NotificationSystem } from './NotificationSystem';
 import { PrivateChat } from './PrivateChat';
 import { Footer } from './Footer';
+import { EditProfileModal } from './EditProfileModal';
 
 interface BuyerDashboardProps {
   isGuest?: boolean;
@@ -22,6 +23,7 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
   const [offers, setOffers] = useState<OfferWithDetails[]>([]);
   const [loading, setLoading] = useState(true);
   const [showNewRequest, setShowNewRequest] = useState(false);
+  const [showProfileEdit, setShowProfileEdit] = useState(false);
   const [activeTab, setActiveTab] = useState<'targets' | 'offers'>('targets');
   const [selectedChat, setSelectedChat] = useState<{ 
     conversationId: string; 
@@ -145,10 +147,22 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
               </button>
             ) : (
               <>
-                <div className="text-right">
-                  <p className="text-sm font-bold text-slate-900">{profile?.full_name}</p>
+                <button
+                  onClick={() => setShowProfileEdit(true)}
+                  className="text-right hover:opacity-80 transition-opacity cursor-pointer group"
+                  title="Modifica Profilo"
+                >
+                  <p className="text-sm font-bold text-slate-900 group-hover:text-orange-600 transition-colors">
+                    {profile?.full_name}
+                  </p>
                   <p className="text-xs text-slate-500">{profile?.city}</p>
-                </div>
+                  {profile?.email && (
+                    <p className="text-xs text-slate-400 mt-0.5">{profile.email}</p>
+                  )}
+                  {profile?.phone_number && (
+                    <p className="text-xs text-slate-400">{profile.phone_number}</p>
+                  )}
+                </button>
                 <div className="relative">
                   <NotificationSystem />
                 </div>
@@ -361,6 +375,79 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
                   <div className="bg-slate-800/30 p-6 rounded-2xl border border-slate-700/50 mb-4">
                     <p className="text-slate-200 leading-relaxed">{offer.message}</p>
                   </div>
+                  
+                  {offer.attachments && offer.attachments.length > 0 && (
+                    <div className="mb-4">
+                      <p className="text-sm font-medium text-slate-300 mb-3">File Allegati:</p>
+                      <div className="space-y-2">
+                        {offer.attachments.map((attachment, idx) => {
+                          const getFileIcon = (mimeType: string) => {
+                            if (mimeType.startsWith('image/')) {
+                              return <Image className="w-4 h-4 text-orange-400" />;
+                            } else if (mimeType === 'application/pdf') {
+                              return <FileText className="w-4 h-4 text-orange-400" />;
+                            } else {
+                              return <File className="w-4 h-4 text-orange-400" />;
+                            }
+                          };
+
+                          const formatFileSize = (bytes: number): string => {
+                            if (bytes === 0) return '0 Bytes';
+                            const k = 1024;
+                            const sizes = ['Bytes', 'KB', 'MB', 'GB'];
+                            const i = Math.floor(Math.log(bytes) / Math.log(k));
+                            return Math.round(bytes / Math.pow(k, i) * 100) / 100 + ' ' + sizes[i];
+                          };
+
+                          const isImage = attachment.type.startsWith('image/');
+                          const isPDF = attachment.type === 'application/pdf';
+
+                          return (
+                            <div
+                              key={attachment.id || idx}
+                              className="flex items-center gap-3 p-3 rounded-xl bg-slate-800/50 border border-slate-700/50 hover:border-orange-600/50 transition-all group"
+                            >
+                              <div className="w-10 h-10 rounded-lg bg-orange-600/20 flex items-center justify-center flex-shrink-0">
+                                {getFileIcon(attachment.type)}
+                              </div>
+                              <div className="flex-1 min-w-0">
+                                <p className="text-sm text-white font-medium truncate">
+                                  {attachment.name}
+                                </p>
+                                <p className="text-xs text-slate-400">
+                                  {formatFileSize(attachment.size)}
+                                </p>
+                              </div>
+                              <div className="flex gap-2 flex-shrink-0">
+                                {isImage && (
+                                  <a
+                                    href={attachment.url}
+                                    target="_blank"
+                                    rel="noopener noreferrer"
+                                    className="p-2 rounded-lg bg-blue-600/20 hover:bg-blue-600/30 text-blue-400 transition-colors"
+                                    title="Visualizza immagine"
+                                  >
+                                    <Eye className="w-4 h-4" />
+                                  </a>
+                                )}
+                                <a
+                                  href={attachment.url}
+                                  download={attachment.name}
+                                  target={isPDF || isImage ? "_blank" : undefined}
+                                  rel="noopener noreferrer"
+                                  className="p-2 rounded-lg bg-orange-600/20 hover:bg-orange-600/30 text-orange-400 transition-colors"
+                                  title="Scarica file"
+                                >
+                                  <Download className="w-4 h-4" />
+                                </a>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    </div>
+                  )}
+
                   <div className="flex items-center justify-between pt-4 border-t border-slate-800/50">
                     <span className="text-sm text-slate-500">
                       Ricevuta il {new Date(offer.created_at).toLocaleDateString('it-IT')}
@@ -440,6 +527,13 @@ export function BuyerDashboard({ isGuest = false, onAuthRequired, onBack }: Buye
           otherPartyName={selectedChat.otherParty}
           targetTitle={selectedChat.target}
           onClose={() => setSelectedChat(null)}
+        />
+      )}
+
+      {showProfileEdit && (
+        <EditProfileModal
+          isOpen={showProfileEdit}
+          onClose={() => setShowProfileEdit(false)}
         />
       )}
 

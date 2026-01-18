@@ -92,6 +92,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     profileData: {
       full_name: string;
       city: string;
+      phone_number?: string | null;
       fonte_acquisizione?: string;
       role: UserRole;
       // Buyer fields

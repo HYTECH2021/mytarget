@@ -165,17 +165,17 @@ export function PrivateChat({
   const otherPartyId = isBuyer ? sellerId : buyerId;
 
   return (
-    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-4">
-      <div className="bg-slate-900 rounded-3xl shadow-2xl max-w-2xl w-full h-[80vh] flex flex-col border border-slate-800">
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center sm:items-center sm:justify-center z-50 p-0 sm:p-4">
+      <div className="bg-slate-900 sm:rounded-3xl shadow-2xl max-w-2xl w-full h-screen sm:h-[80vh] flex flex-col border-0 sm:border border-slate-800">
         {/* Header */}
-        <div className="p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900 rounded-t-3xl">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-orange-600/20 flex items-center justify-center">
-              <MessageCircle className="w-5 h-5 text-orange-500" />
+        <div className="p-4 sm:p-6 border-b border-slate-800 flex items-center justify-between bg-slate-900 sm:rounded-t-3xl flex-shrink-0">
+          <div className="flex items-center gap-2 sm:gap-3 min-w-0 flex-1">
+            <div className="w-8 h-8 sm:w-10 sm:h-10 rounded-full bg-orange-600/20 flex items-center justify-center flex-shrink-0">
+              <MessageCircle className="w-4 h-4 sm:w-5 sm:h-5 text-orange-500" />
             </div>
-            <div>
-              <h3 className="text-lg font-bold text-white">Chat con {otherPartyName}</h3>
-              <p className="text-xs text-slate-400">Target: {targetTitle}</p>
+            <div className="min-w-0 flex-1">
+              <h3 className="text-base sm:text-lg font-bold text-white truncate">Chat con {otherPartyName}</h3>
+              <p className="text-xs text-slate-400 truncate">Target: {targetTitle}</p>
             </div>
           </div>
           <button
@@ -211,7 +211,7 @@ export function PrivateChat({
                   className={`flex ${isOwnMessage ? 'justify-end' : 'justify-start'}`}
                 >
                   <div
-                    className={`max-w-[70%] rounded-2xl p-4 ${
+                    className={`max-w-[85%] sm:max-w-[70%] rounded-2xl p-3 sm:p-4 ${
                       isOwnMessage
                         ? 'bg-gradient-to-r from-orange-600 to-orange-500 text-white'
                         : 'bg-slate-800 text-slate-200 border border-slate-700'
@@ -237,28 +237,28 @@ export function PrivateChat({
         </div>
 
         {/* Input Area */}
-        <form onSubmit={handleSendMessage} className="p-6 border-t border-slate-800 bg-slate-900 rounded-b-3xl">
+        <form onSubmit={handleSendMessage} className="p-4 sm:p-6 border-t border-slate-800 bg-slate-900 sm:rounded-b-3xl flex-shrink-0">
           {error && (
-            <div className="mb-4 p-3 rounded-xl bg-red-500/10 border border-red-500/50 text-red-400 text-sm">
+            <div className="mb-3 sm:mb-4 p-2 sm:p-3 rounded-xl bg-red-500/10 border border-red-500/50 text-red-400 text-xs sm:text-sm">
               {error}
             </div>
           )}
-          <div className="flex gap-3">
+          <div className="flex gap-2 sm:gap-3">
             <input
               type="text"
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
               placeholder="Scrivi un messaggio..."
-              className="flex-1 px-4 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent"
+              className="flex-1 px-3 sm:px-4 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent text-sm sm:text-base"
               disabled={sending}
             />
             <button
               type="submit"
               disabled={!newMessage.trim() || sending}
-              className="px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-2"
+              className="px-4 sm:px-6 py-2.5 sm:py-3 rounded-xl sm:rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all disabled:opacity-50 disabled:cursor-not-allowed flex items-center gap-1.5 sm:gap-2 flex-shrink-0"
             >
-              <Send className="w-5 h-5" />
-              {sending ? 'Invio...' : 'Invia'}
+              <Send className="w-4 h-4 sm:w-5 sm:h-5" />
+              <span className="hidden sm:inline">{sending ? 'Invio...' : 'Invia'}</span>
             </button>
           </div>
         </form>

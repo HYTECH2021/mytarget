@@ -23,6 +23,7 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
 
   const [formData, setFormData] = useState({
     email: '',
+    phone_number: '',
     password: '',
     full_name: '',
     city: '',
@@ -38,16 +39,54 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
 
   if (!isOpen) return null;
 
+  // Validazione email
+  const validateEmail = (email: string): boolean => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email);
+  };
+
+  // Validazione telefono
+  const validatePhone = (phone: string): boolean => {
+    // Accetta numeri italiani (+39) e internazionali
+    // Formati: +39 123 456 7890, 0039 123 456 7890, 123 456 7890, 1234567890
+    const phoneRegex = /^(\+39|0039)?[\s]?[0-9]{2,3}[\s]?[0-9]{6,7}$/;
+    return phoneRegex.test(phone.replace(/\s/g, ''));
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
     setTermsError(null);
     setSuccessMessage(null);
+    setEmailError(null);
+    setPhoneError(null);
 
     // Validazione checkbox per registrazione
     if (mode === 'register' && !acceptTerms) {
       setTermsError('Devi accettare l\'informativa privacy e i termini per registrarti.');
       return;
+    }
+
+    // Validazione email (obbligatoria per tutti)
+    if (!formData.email || !formData.email.trim()) {
+      setEmailError('L\'email è obbligatoria');
+      return;
+    }
+    if (!validateEmail(formData.email)) {
+      setEmailError('Inserisci un indirizzo email valido (es: nome@dominio.com)');
+      return;
+    }
+
+    // Validazione telefono (obbligatorio per registrazione)
+    if (mode === 'register') {
+      if (!formData.phone_number || !formData.phone_number.trim()) {
+        setPhoneError('Il numero di telefono è obbligatorio');
+        return;
+      }
+      if (!validatePhone(formData.phone_number)) {
+        setPhoneError('Inserisci un numero di telefono valido (es: +39 123 456 7890)');
+        return;
+      }
     }
 
     setLoading(true);
@@ -63,6 +102,7 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
           city: formData.city,
           fonte_acquisizione: formData.fonte_acquisizione,
           role,
+          phone_number: formData.phone_number || null,
         };
 
         if (role === 'buyer') {
@@ -182,17 +222,54 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
-              Email
+              Email *
             </label>
             <input
               type="email"
               required
               value={formData.email}
-              onChange={(e) => setFormData({ ...formData, email: e.target.value })}
-              className="w-full px-4 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent"
+              onChange={(e) => setFormData({ ...formData, email: e.target.value.trim() })}
+              className={`w-full px-4 py-3 rounded-2xl bg-slate-800 border ${
+                formData.email && !validateEmail(formData.email)
+                  ? 'border-red-500'
+                  : 'border-slate-700'
+              } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent`}
               placeholder="tuo@email.com"
+              pattern="[a-z0-9._%+\-]+@[a-z0-9.\-]+\.[a-z]{2,}$"
+              title="Inserisci un indirizzo email valido (es: nome@dominio.com)"
             />
+            {formData.email && !validateEmail(formData.email) && (
+              <p className="text-xs text-red-400 mt-1">Formato email non valido (es: nome@dominio.com)</p>
+            )}
           </div>
+
+          {mode === 'register' && (
+            <div>
+              <label className="block text-sm font-medium text-slate-300 mb-2">
+                Numero di Telefono *
+              </label>
+              <input
+                type="tel"
+                required
+                value={formData.phone_number}
+                onChange={(e) => {
+                  setFormData({ ...formData, phone_number: e.target.value });
+                  setPhoneError(null);
+                }}
+                className={`w-full px-4 py-3 rounded-2xl bg-slate-800 border ${
+                  phoneError ? 'border-red-500' : 'border-slate-700'
+                } text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent`}
+                placeholder="+39 123 456 7890"
+                pattern="[\+\s0-9]{8,15}"
+                title="Inserisci un numero di telefono valido (es: +39 123 456 7890)"
+              />
+              {phoneError ? (
+                <p className="text-xs text-red-400 mt-1">{phoneError}</p>
+              ) : (
+                <p className="text-xs text-slate-500 mt-1">Formato: +39 123 456 7890 o 123 456 7890</p>
+              )}
+            </div>
+          )}
 
           <div>
             <label className="block text-sm font-medium text-slate-300 mb-2">
