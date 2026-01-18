@@ -3,6 +3,7 @@ import { X, Loader2, Plus } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 import type { CategoryData } from '../lib/types';
+import { PhotoUpload } from './PhotoUpload';
 
 interface NewRequestModalProps {
   onClose: () => void;
@@ -16,6 +17,7 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [showCustomCategory, setShowCustomCategory] = useState(false);
   const [customCategory, setCustomCategory] = useState('');
+  const [photos, setPhotos] = useState<string[]>([]);
   const [formData, setFormData] = useState({
     title: '',
     description: '',
@@ -66,6 +68,7 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
           category: finalCategory,
           budget: formData.budget ? parseFloat(formData.budget) : null,
           location: formData.location,
+          photos: JSON.stringify(photos),
         })
         .select()
         .single();
@@ -182,6 +185,36 @@ export function NewRequestModal({ onClose, onSuccess }: NewRequestModalProps) {
               className="w-full px-4 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent resize-none"
               placeholder="Descrivi nel dettaglio cosa stai cercando, le caratteristiche desiderate, condizioni, ecc."
             />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium text-slate-300 mb-2">
+              Foto (opzionale)
+            </label>
+            <div className="grid grid-cols-2 gap-4">
+              {photos.map((photo, index) => (
+                <PhotoUpload
+                  key={index}
+                  currentPhotoUrl={photo}
+                  onPhotoUploaded={(url) => {
+                    const newPhotos = [...photos];
+                    newPhotos[index] = url;
+                    setPhotos(newPhotos.filter(p => p));
+                  }}
+                  type="target"
+                />
+              ))}
+              {photos.length < 4 && (
+                <PhotoUpload
+                  currentPhotoUrl=""
+                  onPhotoUploaded={(url) => setPhotos([...photos, url])}
+                  type="target"
+                />
+              )}
+            </div>
+            <p className="text-xs text-slate-500 mt-2">
+              Puoi caricare fino a 4 foto per aiutare i venditori a capire meglio cosa stai cercando
+            </p>
           </div>
 
           <div className="grid grid-cols-2 gap-4">

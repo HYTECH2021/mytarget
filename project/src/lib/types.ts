@@ -52,11 +52,13 @@ export interface Profile {
   profession: string | null;
   role: UserRole;
   fonte_acquisizione: string | null;
-  // Campi per Seller (Business)
+  // Campi per Seller
+  seller_type: 'business' | 'individual' | null;
+  // Campi per Seller Business
   business_name: string | null;
   vat_number: string | null;
   primary_sector: string | null;
-  // Campi per Buyer (Personale)
+  // Campi per Buyer e Seller Individual
   gender: Gender | null;
   age_range: AgeRange | null;
   created_at: string;

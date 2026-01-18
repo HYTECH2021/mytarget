@@ -1,5 +1,4 @@
 import { useState, useEffect } from 'react';
-import { motion } from 'framer-motion';
 import { Shield, Check, X, TrendingUp, Users, Package, AlertCircle, BarChart3, PieChart, Activity, UserCheck, UserX } from 'lucide-react';
 import { supabase } from '../lib/supabase';
 
@@ -251,10 +250,7 @@ export function AdminPanel() {
       </div>
 
       <div className="grid md:grid-cols-4 gap-4">
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30"
-        >
+        <div className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30 transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-orange-600/30 flex items-center justify-center">
               <Package className="w-6 h-6 text-orange-400" />
@@ -264,12 +260,9 @@ export function AdminPanel() {
               <p className="text-3xl font-black text-white">{stats.totalRequests}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-green-600/20 to-green-500/10 backdrop-blur-sm p-6 rounded-3xl border border-green-600/30"
-        >
+        <div className="bg-gradient-to-br from-green-600/20 to-green-500/10 backdrop-blur-sm p-6 rounded-3xl border border-green-600/30 transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-green-600/30 flex items-center justify-center">
               <UserCheck className="w-6 h-6 text-green-400" />
@@ -279,12 +272,9 @@ export function AdminPanel() {
               <p className="text-3xl font-black text-white">{stats.totalBuyers}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30"
-        >
+        <div className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30 transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-orange-600/30 flex items-center justify-center">
               <UserX className="w-6 h-6 text-orange-400" />
@@ -294,12 +284,9 @@ export function AdminPanel() {
               <p className="text-3xl font-black text-white">{stats.totalSellers}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
 
-        <motion.div
-          whileHover={{ scale: 1.02 }}
-          className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30"
-        >
+        <div className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30 transition-all duration-300 hover:scale-[1.02]">
           <div className="flex items-center gap-3">
             <div className="w-12 h-12 rounded-2xl bg-orange-600/30 flex items-center justify-center">
               <AlertCircle className="w-6 h-6 text-orange-400" />
@@ -309,7 +296,7 @@ export function AdminPanel() {
               <p className="text-3xl font-black text-white">{stats.pendingSuggestions}</p>
             </div>
           </div>
-        </motion.div>
+        </div>
       </div>
 
       <div className="flex gap-2 p-2 bg-slate-900/50 rounded-3xl border border-slate-800">
@@ -357,22 +344,16 @@ export function AdminPanel() {
           {activeTab === 'categories' && (
             <div className="space-y-6">
               {pendingCategories.length > 0 && (
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30"
-                >
+                <div className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30 transition-all duration-300">
                   <h3 className="text-xl font-black text-white mb-4 flex items-center gap-2">
                     <AlertCircle className="w-5 h-5 text-orange-500" />
                     Categorie in Attesa di Approvazione ({pendingCategories.length})
                   </h3>
                   <div className="space-y-3">
                     {pendingCategories.map((category) => (
-                      <motion.div
+                      <div
                         key={category.id}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={{ opacity: 1, x: 0 }}
-                        className="bg-slate-900/50 p-5 rounded-2xl border border-orange-600/30 flex items-center justify-between"
+                        className="bg-slate-900/50 p-5 rounded-2xl border border-orange-600/30 flex items-center justify-between transition-all duration-300"
                       >
                         <div>
                           <h4 className="text-lg font-bold text-white mb-1">
@@ -394,27 +375,23 @@ export function AdminPanel() {
                           </p>
                         </div>
                         <div className="flex gap-2">
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          <button
                             onClick={() => handleApproveCategory(category)}
-                            className="p-3 rounded-2xl bg-green-600 text-white hover:bg-green-700 transition-colors shadow-lg"
+                            className="p-3 rounded-2xl bg-green-600 text-white hover:bg-green-700 transition-all shadow-lg hover:scale-110 active:scale-95"
                           >
                             <Check className="w-5 h-5" />
-                          </motion.button>
-                          <motion.button
-                            whileHover={{ scale: 1.1 }}
-                            whileTap={{ scale: 0.9 }}
+                          </button>
+                          <button
                             onClick={() => handleRejectCategory(category.id)}
-                            className="p-3 rounded-2xl bg-red-600 text-white hover:bg-red-700 transition-colors shadow-lg"
+                            className="p-3 rounded-2xl bg-red-600 text-white hover:bg-red-700 transition-all shadow-lg hover:scale-110 active:scale-95"
                           >
                             <X className="w-5 h-5" />
-                          </motion.button>
+                          </button>
                         </div>
-                      </motion.div>
+                      </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               )}
 
               {pendingCategories.length === 0 && (
@@ -429,11 +406,7 @@ export function AdminPanel() {
           {activeTab === 'analytics' && (
             <div className="space-y-6">
               <div className="grid md:grid-cols-2 gap-6">
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30"
-                >
+                <div className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30 transition-all duration-300">
                   <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
                     <TrendingUp className="w-5 h-5 text-orange-400" />
                     Top 5 Categorie Trending
@@ -459,14 +432,9 @@ export function AdminPanel() {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.1 }}
-                  className="bg-gradient-to-br from-green-600/20 to-green-500/10 backdrop-blur-sm p-6 rounded-3xl border border-green-600/30"
-                >
+                <div className="bg-gradient-to-br from-green-600/20 to-green-500/10 backdrop-blur-sm p-6 rounded-3xl border border-green-600/30 transition-all duration-300">
                   <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
                     <Activity className="w-5 h-5 text-green-400" />
                     Tasso di Matching
@@ -507,14 +475,9 @@ export function AdminPanel() {
                       <span className="text-white font-bold">{analytics.totalConversations}</span> conversazioni attive
                     </p>
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.2 }}
-                  className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30"
-                >
+                <div className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30 transition-all duration-300">
                   <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
                     <Users className="w-5 h-5 text-orange-400" />
                     Demografia: Professioni
@@ -539,14 +502,9 @@ export function AdminPanel() {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
 
-                <motion.div
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  transition={{ delay: 0.3 }}
-                  className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30"
-                >
+                <div className="bg-gradient-to-br from-orange-600/20 to-orange-500/10 backdrop-blur-sm p-6 rounded-3xl border border-orange-600/30 transition-all duration-300">
                   <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
                     <PieChart className="w-5 h-5 text-orange-400" />
                     Demografia: Età
@@ -571,17 +529,13 @@ export function AdminPanel() {
                       </div>
                     ))}
                   </div>
-                </motion.div>
+                </div>
               </div>
             </div>
           )}
 
           {activeTab === 'users' && (
-            <motion.div
-              initial={{ opacity: 0, y: 20 }}
-              animate={{ opacity: 1, y: 0 }}
-              className="bg-slate-900/50 backdrop-blur-sm p-6 rounded-3xl border border-slate-800"
-            >
+            <div className="bg-slate-900/50 backdrop-blur-sm p-6 rounded-3xl border border-slate-800 transition-all duration-300">
               <h3 className="text-xl font-black text-white mb-6 flex items-center gap-2">
                 <Users className="w-5 h-5 text-blue-400" />
                 Utenti Registrati ({users.length})
@@ -626,7 +580,7 @@ export function AdminPanel() {
                   </tbody>
                 </table>
               </div>
-            </motion.div>
+            </div>
           )}
         </>
       )}

@@ -1,8 +1,8 @@
 /*
-  # I-LOOK For - Reverse Marketplace Schema
+  # MyTarget - Reverse Marketplace Schema
 
   ## Overview
-  This migration creates the complete database schema for the I-LOOK For reverse marketplace
+  This migration creates the complete database schema for the MyTarget reverse marketplace
   where buyers post what they're looking for and sellers send offers.
 
   ## New Tables

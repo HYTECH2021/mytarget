@@ -1,5 +1,5 @@
 import { useState } from 'react';
-import { X, Loader2 } from 'lucide-react';
+import { X, Loader2, Mail, CheckCircle } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { ACQUISITION_SOURCES, GENDERS, AGE_RANGES, BUSINESS_SECTORS } from '../lib/types';
 import type { UserRole } from '../lib/types';
@@ -13,8 +13,12 @@ interface AuthModalProps {
 export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalProps) {
   const [mode, setMode] = useState<'login' | 'register'>('login');
   const [role, setRole] = useState<UserRole>(initialRole);
+  const [sellerType, setSellerType] = useState<'business' | 'individual'>('business');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [successMessage, setSuccessMessage] = useState<string | null>(null);
+  const [acceptTerms, setAcceptTerms] = useState(false);
+  const [termsError, setTermsError] = useState<string | null>(null);
   const { signIn, signUp } = useAuth();
 
   const [formData, setFormData] = useState({
@@ -23,10 +27,10 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
     full_name: '',
     city: '',
     fonte_acquisizione: ACQUISITION_SOURCES[0],
-    // Campi per Buyer
+    // Campi per Buyer e Seller Privato
     gender: '',
     age_range: '',
-    // Campi per Seller
+    // Campi per Seller Azienda
     business_name: '',
     vat_number: '',
     primary_sector: '',
@@ -37,6 +41,15 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setError(null);
+    setTermsError(null);
+    setSuccessMessage(null);
+
+    // Validazione checkbox per registrazione
+    if (mode === 'register' && !acceptTerms) {
+      setTermsError('Devi accettare l\'informativa privacy e i termini per registrarti.');
+      return;
+    }
+
     setLoading(true);
 
     try {
@@ -56,14 +69,21 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
           profileData.gender = formData.gender;
           profileData.age_range = formData.age_range;
         } else {
-          profileData.business_name = formData.business_name;
-          profileData.vat_number = formData.vat_number;
-          profileData.primary_sector = formData.primary_sector;
+          profileData.seller_type = sellerType;
+          if (sellerType === 'business') {
+            profileData.business_name = formData.business_name;
+            profileData.vat_number = formData.vat_number;
+            profileData.primary_sector = formData.primary_sector;
+          } else {
+            profileData.gender = formData.gender;
+            profileData.age_range = formData.age_range;
+          }
         }
 
         const { error } = await signUp(formData.email, formData.password, profileData);
         if (error) throw error;
-        onClose();
+
+        setSuccessMessage('Registrazione completata! Controlla la tua email per verificare il tuo account.');
       }
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Si è verificato un errore');
@@ -91,37 +111,73 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
 
         <form onSubmit={handleSubmit} className="p-6 space-y-6">
           {mode === 'register' && (
-            <div>
-              <label className="block text-sm font-medium text-slate-300 mb-3">
-                Tipo di Account
-              </label>
-              <div className="grid grid-cols-2 gap-3">
-                <button
-                  type="button"
-                  onClick={() => setRole('buyer')}
-                  className={`p-4 rounded-2xl border-2 transition-all ${
-                    role === 'buyer'
-                      ? 'border-orange-600 bg-orange-600/10 text-white'
-                      : 'border-slate-700 text-slate-400 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="font-semibold mb-1">Acquirente</div>
-                  <div className="text-xs">Cerco prodotti</div>
-                </button>
-                <button
-                  type="button"
-                  onClick={() => setRole('seller')}
-                  className={`p-4 rounded-2xl border-2 transition-all ${
-                    role === 'seller'
-                      ? 'border-orange-600 bg-orange-600/10 text-white'
-                      : 'border-slate-700 text-slate-400 hover:border-slate-600'
-                  }`}
-                >
-                  <div className="font-semibold mb-1">Business</div>
-                  <div className="text-xs">Vendo prodotti</div>
-                </button>
+            <>
+              <div>
+                <label className="block text-sm font-medium text-slate-300 mb-3">
+                  Tipo di Account
+                </label>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setRole('buyer')}
+                    className={`p-4 rounded-2xl border-2 transition-all ${
+                      role === 'buyer'
+                        ? 'border-orange-600 bg-orange-600/10 text-white'
+                        : 'border-slate-700 text-slate-400 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="font-semibold mb-1">Acquirente</div>
+                    <div className="text-xs">Cerco prodotti</div>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setRole('seller')}
+                    className={`p-4 rounded-2xl border-2 transition-all ${
+                      role === 'seller'
+                        ? 'border-orange-600 bg-orange-600/10 text-white'
+                        : 'border-slate-700 text-slate-400 hover:border-slate-600'
+                    }`}
+                  >
+                    <div className="font-semibold mb-1">Venditore</div>
+                    <div className="text-xs">Vendo prodotti</div>
+                  </button>
+                </div>
               </div>
-            </div>
+
+              {role === 'seller' && (
+                <div>
+                  <label className="block text-sm font-medium text-slate-300 mb-3">
+                    Tipologia di Venditore
+                  </label>
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      type="button"
+                      onClick={() => setSellerType('business')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        sellerType === 'business'
+                          ? 'border-orange-600 bg-orange-600/10 text-white'
+                          : 'border-slate-700 text-slate-400 hover:border-slate-600'
+                      }`}
+                    >
+                      <div className="font-semibold mb-1">Azienda</div>
+                      <div className="text-xs">Commerciante/P.IVA</div>
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setSellerType('individual')}
+                      className={`p-4 rounded-2xl border-2 transition-all ${
+                        sellerType === 'individual'
+                          ? 'border-orange-600 bg-orange-600/10 text-white'
+                          : 'border-slate-700 text-slate-400 hover:border-slate-600'
+                      }`}
+                    >
+                      <div className="font-semibold mb-1">Privato</div>
+                      <div className="text-xs">Persona fisica</div>
+                    </button>
+                  </div>
+                </div>
+              )}
+            </>
           )}
 
           <div>
@@ -156,7 +212,7 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
             <>
               <div>
                 <label className="block text-sm font-medium text-slate-300 mb-2">
-                  {role === 'seller' ? 'Nome Attività' : 'Nome Completo'}
+                  {role === 'seller' && sellerType === 'business' ? 'Nome Attività' : 'Nome Completo'}
                 </label>
                 <input
                   type="text"
@@ -164,7 +220,7 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
                   value={formData.full_name}
                   onChange={(e) => setFormData({ ...formData, full_name: e.target.value })}
                   className="w-full px-4 py-3 rounded-2xl bg-slate-800 border border-slate-700 text-white placeholder-slate-500 focus:outline-none focus:ring-2 focus:ring-orange-600 focus:border-transparent"
-                  placeholder={role === 'seller' ? 'Nome della tua attività' : 'Mario Rossi'}
+                  placeholder={role === 'seller' && sellerType === 'business' ? 'Nome della tua attività' : 'Mario Rossi'}
                 />
               </div>
 
@@ -182,7 +238,7 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
                 />
               </div>
 
-              {role === 'buyer' ? (
+              {role === 'buyer' || (role === 'seller' && sellerType === 'individual') ? (
                 <div className="grid grid-cols-2 gap-4">
                   <div>
                     <label className="block text-sm font-medium text-slate-300 mb-2">
@@ -285,9 +341,66 @@ export function AuthModal({ isOpen, onClose, initialRole = 'buyer' }: AuthModalP
             </div>
           )}
 
+          {successMessage && (
+            <div className="p-6 rounded-2xl bg-green-500/10 border-2 border-green-500/50 space-y-3">
+              <div className="flex items-center gap-3">
+                <div className="w-10 h-10 rounded-full bg-green-500/20 flex items-center justify-center">
+                  <CheckCircle className="w-6 h-6 text-green-400" />
+                </div>
+                <div>
+                  <h3 className="text-white font-bold text-lg">Registrazione Completata!</h3>
+                </div>
+              </div>
+              <div className="bg-slate-800/50 p-4 rounded-xl border border-slate-700">
+                <div className="flex items-start gap-3">
+                  <Mail className="w-5 h-5 text-green-400 mt-0.5 flex-shrink-0" />
+                  <div className="text-sm text-slate-300 space-y-2">
+                    <p className="font-semibold text-green-400">
+                      Abbiamo inviato un'email di verifica a {formData.email}
+                    </p>
+                    <p>
+                      Per completare la registrazione:
+                    </p>
+                    <ol className="list-decimal list-inside space-y-1 text-slate-400">
+                      <li>Apri la tua casella email</li>
+                      <li>Cerca l'email da MY TARGET</li>
+                      <li>Clicca sul pulsante "Conferma indirizzo email"</li>
+                    </ol>
+                    <p className="text-xs text-slate-500 mt-3">
+                      Non trovi l'email? Controlla la cartella spam o richiedi un nuovo link.
+                    </p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {mode === 'register' && (
+            <div className="space-y-2">
+              <div className="flex items-start gap-3">
+                <input
+                  type="checkbox"
+                  id="accept-terms"
+                  checked={acceptTerms}
+                  onChange={(e) => {
+                    setAcceptTerms(e.target.checked);
+                    setTermsError(null);
+                  }}
+                  className="mt-1 w-4 h-4 rounded border-slate-700 bg-slate-800 text-orange-600 focus:ring-2 focus:ring-orange-600 focus:ring-offset-0 focus:ring-offset-slate-900 cursor-pointer"
+                />
+                <label htmlFor="accept-terms" className="text-sm text-slate-300 leading-relaxed cursor-pointer">
+                  Accetto l'<a href="/privacy" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-400 hover:underline font-semibold">Informativa sulla Privacy</a> e i <a href="/termini" target="_blank" rel="noopener noreferrer" className="text-orange-500 hover:text-orange-400 hover:underline font-semibold">Termini e Condizioni d'uso</a>
+                </label>
+              </div>
+              {termsError && (
+                <p className="text-sm text-red-500 ml-7">{termsError}</p>
+              )}
+            </div>
+          )}
+
           <button
             type="submit"
-            disabled={loading}
+            disabled={loading || (mode === 'register' && !acceptTerms)}
             className={`w-full py-3 rounded-2xl font-semibold text-white transition-all ${
               role === 'buyer'
                 ? 'bg-orange-600 hover:bg-orange-700'

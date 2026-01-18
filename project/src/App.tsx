@@ -5,12 +5,18 @@ import { BuyerDashboard } from './components/BuyerDashboard';
 import { SellerDashboard } from './components/SellerDashboard';
 import { NicheLandingPage } from './components/NicheLandingPage';
 import { AuthModal } from './components/AuthModal';
+import { SupportChat } from './components/SupportChat';
+import { PrivacyPolicy } from './pages/PrivacyPolicy';
+import { CookiePolicy } from './pages/CookiePolicy';
+import { TerminiCondizioni } from './pages/TerminiCondizioni';
+import { Contatti } from './pages/Contatti';
 import type { UserRole } from './lib/types';
 
 function AppContent() {
-  const { user, profile, loading } = useAuth();
+  const { user, profile, loading, error } = useAuth();
   const [showAuthModal, setShowAuthModal] = useState(false);
   const [authRole, setAuthRole] = useState<UserRole>('buyer');
+  const [guestMode, setGuestMode] = useState<UserRole | null>(null);
   const [nicheParams, setNicheParams] = useState<{ category?: string; location?: string } | null>(null);
 
   useEffect(() => {
@@ -23,20 +29,88 @@ function AppContent() {
     }
   }, []);
 
+  // Gestione routing per pagine legali
+  const currentPath = window.location.pathname;
+
   const handleGetStarted = (role: UserRole) => {
     setAuthRole(role);
     setShowAuthModal(true);
   };
 
+  const handleGuestMode = (role: UserRole) => {
+    setGuestMode(role);
+  };
+
+  const handleAuthRequired = (role: UserRole) => {
+    setAuthRole(role);
+    setShowAuthModal(true);
+  };
+
+  // Gestione routing per pagine legali
+  if (currentPath === '/privacy') {
+    return <PrivacyPolicy />;
+  }
+  
+  if (currentPath === '/cookie-policy') {
+    return <CookiePolicy />;
+  }
+  
+  if (currentPath === '/termini') {
+    return <TerminiCondizioni />;
+  }
+  
+  if (currentPath === '/contatti') {
+    return <Contatti />;
+  }
+
+  if (error) {
+    return (
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center p-4">
+        <div className="max-w-md text-center">
+          <div className="text-red-600 text-xl mb-4">Errore di configurazione</div>
+          <div className="text-slate-600">{error}</div>
+          <div className="text-slate-500 text-sm mt-4">
+            Le variabili d'ambiente non sono configurate correttamente.
+          </div>
+        </div>
+      </div>
+    );
+  }
+
   if (loading) {
     return (
-      <div className="min-h-screen bg-slate-950 flex items-center justify-center">
-        <div className="text-white text-xl">Caricamento...</div>
+      <div className="min-h-screen bg-gray-200 flex items-center justify-center">
+        <div className="text-slate-900 text-xl">Caricamento...</div>
       </div>
     );
   }
 
   if (!user || !profile) {
+    if (guestMode) {
+      return (
+        <>
+          {guestMode === 'buyer' ? (
+            <BuyerDashboard
+              isGuest
+              onAuthRequired={handleAuthRequired}
+              onBack={() => setGuestMode(null)}
+            />
+          ) : (
+            <SellerDashboard
+              isGuest
+              onAuthRequired={handleAuthRequired}
+              onBack={() => setGuestMode(null)}
+            />
+          )}
+          <AuthModal
+            isOpen={showAuthModal}
+            onClose={() => setShowAuthModal(false)}
+            initialRole={authRole}
+          />
+        </>
+      );
+    }
+
     if (nicheParams?.category) {
       return (
         <NicheLandingPage
@@ -49,7 +123,10 @@ function AppContent() {
 
     return (
       <>
-        <LandingPage onGetStarted={handleGetStarted} />
+        <LandingPage
+          onGetStarted={handleGetStarted}
+          onGuestMode={handleGuestMode}
+        />
         <AuthModal
           isOpen={showAuthModal}
           onClose={() => setShowAuthModal(false)}
@@ -59,11 +136,22 @@ function AppContent() {
     );
   }
 
-  if (profile.role === 'buyer') {
-    return <BuyerDashboard />;
-  }
+  console.log('User logged in:', { user: user.email, profile: profile.full_name, role: profile.role });
 
-  return <SellerDashboard />;
+  const handleBackToLanding = () => {
+    window.location.href = '/';
+  };
+
+  return (
+    <>
+      {profile.role === 'buyer' ? (
+        <BuyerDashboard onBack={handleBackToLanding} />
+      ) : (
+        <SellerDashboard onBack={handleBackToLanding} />
+      )}
+      <SupportChat />
+    </>
+  );
 }
 
 export default function App() {

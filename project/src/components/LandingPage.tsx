@@ -1,11 +1,11 @@
 import { useState, useEffect } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Crosshair, TrendingUp, Sparkles, Zap, Users, BarChart3 } from 'lucide-react';
-import { Logo } from './Logo';
+import Logo from './Logo';
 import { Footer } from './Footer';
 
 interface LandingPageProps {
   onGetStarted: (role: 'buyer' | 'seller') => void;
+  onGuestMode?: (role: 'buyer' | 'seller') => void;
 }
 
 const AI_REFINEMENT_TEMPLATES: Record<string, any> = {
@@ -35,7 +35,7 @@ const AI_REFINEMENT_TEMPLATES: Record<string, any> = {
   }
 };
 
-export function LandingPage({ onGetStarted }: LandingPageProps) {
+export function LandingPage({ onGetStarted, onGuestMode }: LandingPageProps) {
   const [aiInput, setAiInput] = useState('');
   const [aiOutput, setAiOutput] = useState('');
   const [isRefining, setIsRefining] = useState(false);
@@ -89,20 +89,14 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
   };
 
   return (
-    <div className="min-h-screen bg-[#0f172a]">
-      <nav className="border-b border-slate-800/50 bg-[#0f172a]/90 backdrop-blur-xl sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-200">
+      <nav className="border-b border-slate-200 bg-white/90 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
-          <div className="flex items-center gap-3">
-            <Logo size={48} />
-            <div>
-              <span className="text-2xl font-black text-white tracking-tight italic">MY TARGET</span>
-              <p className="text-xs text-orange-500 font-medium">Smetti di cercare. Fatti trovare.</p>
-            </div>
-          </div>
+          <Logo size={48} showText={true} blackBg={false} />
           <div className="flex gap-4">
             <button
               onClick={() => onGetStarted('buyer')}
-              className="px-8 py-3 rounded-3xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30"
+              className="px-8 py-3 rounded-3xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95"
             >
               Accedi
             </button>
@@ -110,42 +104,42 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
         </div>
       </nav>
 
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative">
-        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-orange-600/10 rounded-full blur-[150px] pointer-events-none"></div>
+      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20 relative overflow-hidden">
+        <div className="absolute top-20 left-1/2 -translate-x-1/2 w-[800px] h-[800px] bg-orange-600/5 rounded-full blur-[150px] pointer-events-none"></div>
 
         <div className="text-center mb-20 relative z-10">
-          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-orange-600/10 border border-orange-600/30 backdrop-blur-sm mb-8">
-            <Logo size={16} />
-            <span className="text-sm text-orange-400 font-bold tracking-wide">IL MARKETPLACE INVERTITO</span>
+          <div className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-orange-50 border border-orange-200 backdrop-blur-sm mb-8">
+            <Logo size={16} showText={false} />
+            <span className="text-sm text-orange-600 font-bold tracking-wide">IL MARKETPLACE INVERTITO</span>
           </div>
 
-          <h1 className="text-7xl md:text-9xl font-black text-white mb-6 leading-none tracking-tighter">
+          <h1 className="text-7xl md:text-9xl font-black text-slate-900 mb-6 leading-none tracking-tighter">
             PUNTA.
             <br />
-            <span className="bg-gradient-to-r from-orange-400 via-orange-500 to-orange-600 bg-clip-text text-transparent">
+            <span className="bg-gradient-to-r from-orange-500 via-orange-600 to-orange-700 bg-clip-text text-transparent">
               ACQUISISCI.
             </span>
           </h1>
-          <p className="text-2xl md:text-3xl text-slate-300 mb-8 max-w-4xl mx-auto font-light leading-relaxed">
-            Smetti di cercare. <span className="text-orange-500 font-bold">Fatti trovare.</span>
+          <p className="text-2xl md:text-3xl text-slate-600 mb-8 max-w-4xl mx-auto font-light leading-relaxed">
+            Smetti di cercare. <span className="text-orange-600 font-bold">Fatti trovare.</span>
           </p>
-          <p className="text-lg text-slate-400 mb-16 max-w-3xl mx-auto leading-relaxed">
+          <p className="text-lg text-slate-500 mb-16 max-w-3xl mx-auto leading-relaxed">
             Da preda a cacciatore: pubblica il tuo obiettivo e lascia che le aziende competano per te. Precisione millimetrica. Risultati garantiti.
           </p>
 
-          <div className="bg-slate-900/50 backdrop-blur-xl border border-orange-600/20 rounded-3xl p-8 mb-12 max-w-3xl mx-auto">
+          <div className="bg-white border border-slate-200 rounded-3xl p-8 mb-12 max-w-3xl mx-auto shadow-xl transition-all duration-500">
             <div className="flex items-center gap-3 mb-6">
-              <Sparkles className="w-6 h-6 text-orange-500" />
-              <h3 className="text-xl font-bold text-white">AI Target Generator</h3>
+              <Sparkles className="w-6 h-6 text-orange-600" />
+              <h3 className="text-xl font-bold text-slate-900">AI Target Generator</h3>
             </div>
-            <p className="text-slate-400 text-sm mb-6">Trasforma un desiderio vago in una specifica professionale con l'AI</p>
+            <p className="text-slate-600 text-sm mb-6">Trasforma un desiderio vago in una specifica professionale con l'AI</p>
 
             <div className="space-y-4">
               <textarea
                 value={aiInput}
                 onChange={(e) => setAiInput(e.target.value)}
                 placeholder="Es: 'Vorrei cambiare l'arredamento del mio ufficio...'"
-                className="w-full px-6 py-4 bg-slate-800/50 border border-slate-700 rounded-2xl text-white placeholder-slate-500 focus:outline-none focus:border-orange-500 transition-colors resize-none h-24"
+                className="w-full px-6 py-4 bg-gray-50 border border-slate-300 rounded-2xl text-slate-900 placeholder-slate-400 focus:outline-none focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 transition-all resize-none h-24"
               />
               <button
                 onClick={handleAIRefine}
@@ -154,12 +148,9 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
               >
                 {isRefining ? (
                   <>
-                    <motion.div
-                      animate={{ rotate: 360 }}
-                      transition={{ duration: 1, repeat: Infinity, ease: "linear" }}
-                    >
+                    <div className="animate-spin">
                       <Sparkles className="w-5 h-5" />
-                    </motion.div>
+                    </div>
                     Raffinamento AI in corso...
                   </>
                 ) : (
@@ -170,168 +161,161 @@ export function LandingPage({ onGetStarted }: LandingPageProps) {
                 )}
               </button>
 
-              <AnimatePresence>
-                {isRefining && refineStage > 0 && (
-                  <motion.div
-                    initial={{ opacity: 0, y: 10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    className="mt-4 space-y-2"
-                  >
-                    {[
-                      { stage: 1, text: '🔍 Analisi semantica in corso...' },
-                      { stage: 2, text: '🎯 Identificazione categoria...' },
-                      { stage: 3, text: '💰 Calcolo budget ottimale...' },
-                      { stage: 4, text: '⚡ Generazione specifiche...' },
-                      { stage: 5, text: '✨ Finalizzazione target...' }
-                    ].map(({ stage, text }) => (
-                      <motion.div
-                        key={stage}
-                        initial={{ opacity: 0, x: -20 }}
-                        animate={refineStage >= stage ? { opacity: 1, x: 0 } : {}}
-                        className={`flex items-center gap-3 px-4 py-2 rounded-xl ${
-                          refineStage >= stage
-                            ? 'bg-orange-600/20 border border-orange-600/30'
-                            : 'bg-slate-800/30 border border-slate-700/30'
-                        }`}
-                      >
-                        <div className={`w-2 h-2 rounded-full ${
-                          refineStage >= stage ? 'bg-orange-500 animate-pulse' : 'bg-slate-600'
-                        }`} />
-                        <span className={`text-sm font-medium ${
-                          refineStage >= stage ? 'text-orange-300' : 'text-slate-500'
-                        }`}>
-                          {text}
-                        </span>
-                      </motion.div>
-                    ))}
-                  </motion.div>
-                )}
-              </AnimatePresence>
+              {isRefining && refineStage > 0 && (
+                <div className="mt-4 space-y-2 transition-all duration-300">
+                  {[
+                    { stage: 1, text: '🔍 Analisi semantica in corso...' },
+                    { stage: 2, text: '🎯 Identificazione categoria...' },
+                    { stage: 3, text: '💰 Calcolo budget ottimale...' },
+                    { stage: 4, text: '⚡ Generazione specifiche...' },
+                    { stage: 5, text: '✨ Finalizzazione target...' }
+                  ].map(({ stage, text }) => (
+                    <div
+                      key={stage}
+                      className={`flex items-center gap-3 px-4 py-2 rounded-xl transition-all duration-300 ${
+                        refineStage >= stage
+                          ? 'bg-orange-50 border border-orange-200 opacity-100 translate-x-0'
+                          : 'bg-gray-100 border border-gray-200 opacity-50 -translate-x-2'
+                      }`}
+                    >
+                      <div className={`w-2 h-2 rounded-full ${
+                        refineStage >= stage ? 'bg-orange-600 animate-pulse' : 'bg-slate-400'
+                      }`} />
+                      <span className={`text-sm font-medium ${
+                        refineStage >= stage ? 'text-orange-700' : 'text-slate-500'
+                      }`}>
+                        {text}
+                      </span>
+                    </div>
+                  ))}
+                </div>
+              )}
 
-              <AnimatePresence>
-                {aiOutput && (
-                  <motion.div
-                    initial={{ opacity: 0, scale: 0.95, y: 20 }}
-                    animate={{ opacity: 1, scale: 1, y: 0 }}
-                    exit={{ opacity: 0 }}
-                    transition={{ duration: 0.5 }}
-                    className="mt-6 p-8 bg-gradient-to-br from-orange-600/20 to-orange-500/10 border-2 border-orange-600/40 rounded-3xl relative overflow-hidden"
-                  >
-                    <motion.div
-                      animate={{
-                        background: [
-                          'radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.1) 0%, transparent 50%)',
-                          'radial-gradient(circle at 100% 100%, rgba(249, 115, 22, 0.1) 0%, transparent 50%)',
-                          'radial-gradient(circle at 0% 0%, rgba(249, 115, 22, 0.1) 0%, transparent 50%)'
-                        ]
-                      }}
-                      transition={{ duration: 3, repeat: Infinity }}
-                      className="absolute inset-0 pointer-events-none"
-                    />
+              {aiOutput && (
+                <div className="mt-6 p-8 bg-gradient-to-br from-orange-50 to-orange-100/50 border-2 border-orange-300 rounded-3xl relative overflow-hidden shadow-lg transition-all duration-500">
+                  <div className="absolute inset-0 pointer-events-none bg-gradient-to-br from-orange-500/5 to-transparent opacity-50 animate-pulse" />
                     <div className="relative">
                       <div className="flex items-center gap-3 mb-4">
-                        <div className="w-10 h-10 rounded-xl bg-orange-600/30 flex items-center justify-center">
-                          <Sparkles className="w-5 h-5 text-orange-500" />
+                        <div className="w-10 h-10 rounded-xl bg-orange-100 flex items-center justify-center">
+                          <Sparkles className="w-5 h-5 text-orange-600" />
                         </div>
-                        <span className="text-xs font-black text-orange-400 tracking-wide">GENERATO DA AI</span>
+                        <span className="text-xs font-black text-orange-700 tracking-wide">GENERATO DA AI</span>
                       </div>
-                      <pre className="text-sm text-slate-100 whitespace-pre-wrap font-mono leading-relaxed">{aiOutput}</pre>
+                      <pre className="text-sm text-slate-900 whitespace-pre-wrap font-mono leading-relaxed">{aiOutput}</pre>
                     </div>
-                  </motion.div>
+                  </div>
                 )}
-              </AnimatePresence>
             </div>
           </div>
 
-          <div className="flex flex-col sm:flex-row gap-4 justify-center items-center mb-12">
-            <button
-              onClick={() => onGetStarted('buyer')}
-              className="group relative px-12 py-6 rounded-3xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-black text-xl transition-all shadow-2xl shadow-orange-600/40 hover:shadow-orange-600/60 hover:scale-105 overflow-hidden"
-            >
-              <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
-              <span className="relative flex items-center gap-3">
-                <Logo size={24} />
-                Punta il Tuo Target
-              </span>
-            </button>
-            <button
-              onClick={() => onGetStarted('seller')}
-              className="group relative px-12 py-6 rounded-3xl bg-slate-800 border-2 border-orange-600/30 text-white font-black text-xl transition-all hover:bg-slate-700 hover:border-orange-600/50 overflow-hidden"
-            >
-              <span className="relative flex items-center gap-3">
-                <Crosshair className="w-6 h-6 text-orange-500" />
-                Trova Target
-              </span>
-            </button>
+          <div className="flex flex-col gap-6 justify-center items-center mb-12 transition-all duration-500">
+            <div className="flex flex-col sm:flex-row gap-4 justify-center items-center">
+              <button
+                onClick={() => onGetStarted('buyer')}
+                className="group relative px-12 py-6 rounded-3xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-black text-xl transition-all shadow-2xl shadow-orange-600/40 hover:shadow-orange-600/60 hover:scale-105 hover:-translate-y-1 active:scale-95 overflow-hidden"
+              >
+                <div className="absolute inset-0 bg-gradient-to-r from-orange-400 to-orange-600 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                <span className="relative flex items-center gap-3">
+                  <Logo size={24} showText={false} />
+                  Punta il Tuo Target
+                </span>
+              </button>
+              <button
+                onClick={() => onGetStarted('seller')}
+                className="group relative px-12 py-6 rounded-3xl bg-white border-2 border-orange-300 text-slate-900 font-black text-xl transition-all hover:bg-orange-50 hover:border-orange-400 hover:scale-105 hover:-translate-y-1 active:scale-95 overflow-hidden shadow-lg"
+              >
+                <span className="relative flex items-center gap-3">
+                  <Crosshair className="w-6 h-6 text-orange-600" />
+                  Trova Target
+                </span>
+              </button>
+            </div>
+            {onGuestMode && (
+              <div className="flex flex-col sm:flex-row gap-3 items-center text-sm transition-all duration-500">
+                <span className="text-slate-500">Oppure esplora senza registrarti:</span>
+                <button
+                  onClick={() => onGuestMode('buyer')}
+                  className="text-orange-600 hover:text-orange-700 font-semibold underline underline-offset-4"
+                >
+                  Vedi le ricerche
+                </button>
+                <span className="text-slate-300">•</span>
+                <button
+                  onClick={() => onGuestMode('seller')}
+                  className="text-orange-600 hover:text-orange-700 font-semibold underline underline-offset-4"
+                >
+                  Vedi le offerte
+                </button>
+              </div>
+            )}
           </div>
 
-          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-gradient-to-r from-orange-600/20 to-orange-500/10 border border-orange-600/30">
-            <BarChart3 className="w-5 h-5 text-orange-500" />
-            <span className="text-sm text-slate-300 font-semibold">Per Business: Prevedi la domanda prima che diventi ricerca</span>
+          <div className="inline-flex items-center gap-3 px-6 py-3 rounded-full bg-orange-50 border border-orange-200 transition-all duration-500">
+            <BarChart3 className="w-5 h-5 text-orange-600" />
+            <span className="text-sm text-slate-700 font-semibold">Per Business: Prevedi la domanda prima che diventi ricerca</span>
           </div>
         </div>
 
         <div className="grid md:grid-cols-3 gap-8 mb-20 relative z-10">
-          <div className="group bg-slate-900/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 hover:border-orange-600/50 transition-all hover:bg-slate-900/70">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-orange-600/20 to-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Logo size={32} />
+          {[
+            {
+              icon: <Logo size={32} showText={false} />,
+              title: "Punta il Target",
+              description: "Da preda a cacciatore. Pubblica il tuo obiettivo e lascia che le aziende competano per servirti con precisione millimetrica.",
+              delay: 1.2
+            },
+            {
+              icon: <Crosshair className="w-8 h-8 text-orange-600" />,
+              title: "Acquisizione Intelligente",
+              description: "Per Business: trova lead caldi prima della concorrenza. Prevedi la domanda e colpisci al momento giusto.",
+              delay: 1.3
+            },
+            {
+              icon: <Zap className="w-8 h-8 text-orange-600" />,
+              title: "Velocità Estrema",
+              description: "Zero ricerche infinite. Massima efficienza. Risultati in tempo reale. Il futuro del marketplace è qui.",
+              delay: 1.4
+            }
+          ].map((feature, index) => (
+            <div
+              key={index}
+              className="group bg-white p-8 rounded-3xl border border-slate-200 hover:border-orange-300 transition-all hover:shadow-2xl hover:-translate-y-2 hover:scale-[1.02] shadow-lg duration-300"
+            >
+              <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-orange-100 to-orange-50 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform duration-300">
+                {feature.icon}
+              </div>
+              <h3 className="text-2xl font-black text-slate-900 mb-4 group-hover:text-orange-600 transition-colors">
+                {feature.title}
+              </h3>
+              <p className="text-slate-600 leading-relaxed">
+                {feature.description}
+              </p>
             </div>
-            <h3 className="text-2xl font-black text-white mb-4">
-              Punta il Target
-            </h3>
-            <p className="text-slate-400 leading-relaxed">
-              Da preda a cacciatore. Pubblica il tuo obiettivo e lascia che le aziende competano per servirti con precisione millimetrica.
-            </p>
-          </div>
-
-          <div className="group bg-slate-900/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 hover:border-orange-600/50 transition-all hover:bg-slate-900/70">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-orange-600/20 to-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Crosshair className="w-8 h-8 text-orange-500" />
-            </div>
-            <h3 className="text-2xl font-black text-white mb-4">
-              Acquisizione Intelligente
-            </h3>
-            <p className="text-slate-400 leading-relaxed">
-              Per Business: trova lead caldi prima della concorrenza. Prevedi la domanda e colpisci al momento giusto.
-            </p>
-          </div>
-
-          <div className="group bg-slate-900/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 hover:border-orange-600/50 transition-all hover:bg-slate-900/70">
-            <div className="w-16 h-16 rounded-3xl bg-gradient-to-br from-orange-600/20 to-orange-500/10 flex items-center justify-center mb-6 group-hover:scale-110 transition-transform">
-              <Zap className="w-8 h-8 text-orange-500" />
-            </div>
-            <h3 className="text-2xl font-black text-white mb-4">
-              Velocità Estrema
-            </h3>
-            <p className="text-slate-400 leading-relaxed">
-              Zero ricerche infinite. Massima efficienza. Risultati in tempo reale. Il futuro del marketplace è qui.
-            </p>
-          </div>
+          ))}
         </div>
 
-        <div className="relative bg-gradient-to-br from-orange-600/20 via-orange-500/10 to-transparent p-16 rounded-3xl border border-orange-600/30 text-center overflow-hidden">
-          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgc3Ryb2tlPSIjZjk3MzE2IiBzdHJva2Utd2lkdGg9IjAuNSIgY3g9IjMwIiBjeT0iMzAiIHI9IjE1Ii8+PC9nPjwvc3ZnPg==')] opacity-20"></div>
+        <div className="relative bg-gradient-to-br from-orange-100 via-orange-50 to-white p-16 rounded-3xl border-2 border-orange-200 text-center overflow-hidden shadow-2xl transition-all duration-500">
+          <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB3aWR0aD0iNjAiIGhlaWdodD0iNjAiIHZpZXdCb3g9IjAgMCA2MCA2MCIgeG1sbnM9Imh0dHA6Ly93d3cudzMub3JnLzIwMDAvc3ZnIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxjaXJjbGUgc3Ryb2tlPSIjZjk3MzE2IiBzdHJva2Utd2lkdGg9IjAuNSIgY3g9IjMwIiBjeT0iMzAiIHI9IjE1Ii8+PC9nPjwvc3ZnPg==')] opacity-30"></div>
           <div className="relative z-10">
             <div className="flex items-center justify-center mb-6">
-              <Logo size={80} />
+              <Logo size={80} showText={false} />
             </div>
-            <h2 className="text-5xl font-black text-white mb-6 leading-tight">
+            <h2 className="text-5xl font-black text-slate-900 mb-6 leading-tight">
               Da preda a cacciatore.<br />Inizia oggi.
             </h2>
-            <p className="text-xl text-slate-300 mb-10 max-w-2xl mx-auto leading-relaxed">
+            <p className="text-xl text-slate-700 mb-10 max-w-2xl mx-auto leading-relaxed">
               Unisciti alla rivoluzione del marketplace invertito. Precisione. Velocità. Risultati.
             </p>
             <div className="flex flex-col sm:flex-row gap-4 justify-center">
               <button
                 onClick={() => onGetStarted('buyer')}
-                className="px-12 py-5 rounded-3xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-black text-xl hover:from-orange-500 hover:to-orange-400 transition-all shadow-2xl shadow-orange-600/40 hover:scale-105"
+                className="px-12 py-5 rounded-3xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-black text-xl hover:from-orange-500 hover:to-orange-400 transition-all shadow-2xl shadow-orange-600/40 hover:scale-105 active:scale-95"
               >
                 Inizia Gratis
               </button>
               <button
                 onClick={() => onGetStarted('seller')}
-                className="px-12 py-5 rounded-3xl bg-white/10 backdrop-blur-sm border-2 border-white/20 text-white font-black text-xl hover:bg-white/20 transition-all"
+                className="px-12 py-5 rounded-3xl bg-white border-2 border-orange-300 text-slate-900 font-black text-xl hover:bg-orange-50 transition-all shadow-lg hover:scale-105 active:scale-95"
               >
                 Business? Scopri di più
               </button>

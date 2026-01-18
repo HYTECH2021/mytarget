@@ -1,5 +1,5 @@
-import { motion } from 'framer-motion';
-import { Target, Shield } from 'lucide-react';
+import { Shield } from 'lucide-react';
+import Logo from './Logo';
 
 export function Footer() {
   return (
@@ -7,25 +7,14 @@ export function Footer() {
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
         <div className="flex flex-col md:flex-row items-center justify-between gap-6">
           <div className="flex items-center gap-3">
-            <motion.div
-              whileHover={{ rotate: 360 }}
-              transition={{ duration: 0.6 }}
-              className="w-10 h-10 rounded-2xl bg-gradient-to-br from-orange-600 to-orange-500 flex items-center justify-center"
-            >
-              <Target className="w-5 h-5 text-white" />
-            </motion.div>
+            <Logo size={40} showText={false} blackBg={true} />
             <div>
               <p className="text-lg font-black text-white italic">MY TARGET</p>
               <p className="text-xs text-slate-500">mytarget.ai</p>
             </div>
           </div>
 
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            transition={{ delay: 0.2 }}
-            className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-slate-900/50 to-slate-800/50 border border-slate-800"
-          >
+          <div className="flex items-center gap-3 px-6 py-3 rounded-2xl bg-gradient-to-r from-slate-900/50 to-slate-800/50 border border-slate-800 transition-opacity duration-500">
             <div className="w-8 h-8 rounded-xl bg-orange-600/20 flex items-center justify-center">
               <Shield className="w-4 h-4 text-orange-500" />
             </div>
@@ -33,7 +22,7 @@ export function Footer() {
               <p className="text-xs text-slate-500 leading-tight">Ideato e sviluppato da</p>
               <p className="text-sm font-black text-orange-500 tracking-wide">HYTECH srl</p>
             </div>
-          </motion.div>
+          </div>
 
           <div className="text-center md:text-right">
             <p className="text-xs text-slate-600">© 2026 MY TARGET</p>
@@ -42,8 +31,35 @@ export function Footer() {
         </div>
 
         <div className="mt-6 pt-6 border-t border-slate-900 text-center">
-          <p className="text-xs text-slate-600 leading-relaxed">
+          <p className="text-xs text-slate-600 leading-relaxed mb-4">
             Smetti di cercare. <span className="text-orange-500 font-bold">Fatti trovare.</span>
+          </p>
+          <div className="flex flex-wrap items-center justify-center gap-3 text-xs text-slate-500">
+            <a href="/privacy" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
+              Privacy Policy
+            </a>
+            <span className="text-slate-700">|</span>
+            <a href="/cookie-policy" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
+              Cookie Policy
+            </a>
+            <span className="text-slate-700">|</span>
+            <a href="/termini" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
+              Termini e Condizioni d'uso
+            </a>
+            <span className="text-slate-700">|</span>
+            <a href="/contatti" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">
+              Contatti
+            </a>
+          </div>
+        </div>
+
+        <div className="mt-6 pt-6 border-t border-slate-900 text-xs text-slate-500 text-center md:text-left">
+          <p>
+            HYTECH srl<br />
+            Via Donatori di Sangue, 48<br />
+            25020 San Paolo (BS)<br />
+            P.IVA: 04332900986 • REA: BS-606605 • PEC: <a href="mailto:hytechsrl@legalmail.it" className="hover:text-orange-500 transition-colors underline-offset-4 hover:underline">hytechsrl@legalmail.it</a><br />
+            Foro competente: Brescia
           </p>
         </div>
       </div>

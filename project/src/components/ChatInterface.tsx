@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Send, X, Sparkles, TrendingUp, Target, MessageCircle } from 'lucide-react';
+import { Send, X, Sparkles, Target, MessageCircle, Lightbulb } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
 
@@ -13,6 +12,13 @@ interface Message {
   created_at: string;
 }
 
+interface AISuggestion {
+  type: string;
+  text: string;
+  priority: number;
+  action?: string;
+}
+
 interface ChatInterfaceProps {
   conversationId: string;
   otherPartyName: string;
@@ -20,39 +26,22 @@ interface ChatInterfaceProps {
   onClose: () => void;
 }
 
-const AI_SUGGESTIONS = [
-  "💡 Considera di offrire un piano di pagamento flessibile per aumentare le possibilità di chiusura",
-  "🎯 Metti in evidenza il valore unico che puoi offrire rispetto alla concorrenza",
-  "⚡ Rispondi rapidamente: i primi a rispondere hanno il 70% di possibilità in più di chiudere",
-  "💰 Se il budget è alto, considera di offrire servizi premium aggiuntivi",
-  "🤝 Proponi una call o meeting per costruire fiducia e chiudere più velocemente",
-  "📊 Condividi case study o testimonial per aumentare la credibilità",
-  "🎁 Un piccolo bonus o extra può fare la differenza nella negoziazione",
-  "⏰ Crea urgenza menzionando disponibilità limitata o offerte a tempo"
-];
-
 export function ChatInterface({ conversationId, otherPartyName, targetTitle, onClose }: ChatInterfaceProps) {
   const { profile } = useAuth();
   const [messages, setMessages] = useState<Message[]>([]);
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
-  const [showAISuggestion, setShowAISuggestion] = useState(false);
-  const [currentSuggestion, setCurrentSuggestion] = useState('');
+  const [showAISuggestions, setShowAISuggestions] = useState(false);
+  const [aiSuggestions, setAiSuggestions] = useState<AISuggestion[]>([]);
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false);
   const messagesEndRef = useRef<HTMLDivElement>(null);
 
   useEffect(() => {
     loadMessages();
     const subscription = subscribeToMessages();
 
-    const suggestionTimer = setTimeout(() => {
-      if (messages.length > 0) {
-        showRandomSuggestion();
-      }
-    }, 10000);
-
     return () => {
       subscription.unsubscribe();
-      clearTimeout(suggestionTimer);
     };
   }, [conversationId]);
 
@@ -99,14 +88,44 @@ export function ChatInterface({ conversationId, otherPartyName, targetTitle, onC
     return channel;
   };
 
-  const showRandomSuggestion = () => {
-    const suggestion = AI_SUGGESTIONS[Math.floor(Math.random() * AI_SUGGESTIONS.length)];
-    setCurrentSuggestion(suggestion);
-    setShowAISuggestion(true);
+  const fetchAISuggestions = async () => {
+    if (!profile) return;
 
-    setTimeout(() => {
-      setShowAISuggestion(false);
-    }, 8000);
+    setLoadingSuggestions(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) return;
+
+      const response = await fetch(
+        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/ai-chat-suggestions`,
+        {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${session.access_token}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            conversationId,
+            userRole: profile.role,
+          }),
+        }
+      );
+
+      if (response.ok) {
+        const data = await response.json();
+        setAiSuggestions(data.suggestions || []);
+        setShowAISuggestions(true);
+      }
+    } catch (error) {
+      console.error('Error fetching AI suggestions:', error);
+    } finally {
+      setLoadingSuggestions(false);
+    }
+  };
+
+  const useSuggestion = (suggestionText: string) => {
+    setNewMessage(suggestionText);
+    setShowAISuggestions(false);
   };
 
   const handleSendMessage = async (e: React.FormEvent) => {
@@ -126,23 +145,15 @@ export function ChatInterface({ conversationId, otherPartyName, targetTitle, onC
       console.error('Error sending message:', error);
     } else {
       setNewMessage('');
-      setTimeout(showRandomSuggestion, 3000);
+      setTimeout(() => {
+        fetchAISuggestions();
+      }, 2000);
     }
   };
 
   return (
-    <motion.div
-      initial={{ opacity: 0 }}
-      animate={{ opacity: 1 }}
-      exit={{ opacity: 0 }}
-      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm"
-    >
-      <motion.div
-        initial={{ scale: 0.9, opacity: 0 }}
-        animate={{ scale: 1, opacity: 1 }}
-        exit={{ scale: 0.9, opacity: 0 }}
-        className="w-full max-w-4xl h-[80vh] bg-gradient-to-br from-slate-900 to-slate-950 rounded-3xl border border-orange-600/30 shadow-2xl shadow-orange-600/20 flex flex-col overflow-hidden"
-      >
+    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/80 backdrop-blur-sm transition-opacity duration-300">
+      <div className="w-full max-w-4xl h-[80vh] bg-gradient-to-br from-slate-900 to-slate-950 rounded-3xl border border-orange-600/30 shadow-2xl shadow-orange-600/20 flex flex-col overflow-hidden transition-all duration-300">
         <div className="bg-gradient-to-r from-orange-600/20 to-orange-500/10 border-b border-orange-600/30 p-6 flex items-center justify-between">
           <div className="flex items-center gap-4">
             <div className="w-12 h-12 rounded-2xl bg-orange-600/30 flex items-center justify-center">
@@ -181,11 +192,9 @@ export function ChatInterface({ conversationId, otherPartyName, targetTitle, onC
             messages.map((message) => {
               const isOwn = message.sender_id === profile?.id;
               return (
-                <motion.div
+                <div
                   key={message.id}
-                  initial={{ opacity: 0, y: 20 }}
-                  animate={{ opacity: 1, y: 0 }}
-                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'}`}
+                  className={`flex ${isOwn ? 'justify-end' : 'justify-start'} transition-all duration-300`}
                 >
                   <div
                     className={`max-w-[70%] px-6 py-4 rounded-2xl ${
@@ -202,44 +211,63 @@ export function ChatInterface({ conversationId, otherPartyName, targetTitle, onC
                       })}
                     </p>
                   </div>
-                </motion.div>
+                </div>
               );
             })
           )}
           <div ref={messagesEndRef} />
         </div>
 
-        <AnimatePresence>
-          {showAISuggestion && (
-            <motion.div
-              initial={{ opacity: 0, y: 50 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: 50 }}
-              className="mx-6 mb-4 p-4 rounded-2xl bg-gradient-to-r from-orange-600/20 to-orange-500/10 border border-orange-500/30"
-            >
-              <div className="flex items-start gap-3">
+        {showAISuggestions && aiSuggestions.length > 0 && (
+          <div className="mx-6 mb-4 p-4 rounded-2xl bg-gradient-to-r from-orange-600/20 to-orange-500/10 border border-orange-500/30 transition-all duration-300">
+              <div className="flex items-start gap-3 mb-3">
                 <div className="w-8 h-8 rounded-xl bg-orange-600/30 flex items-center justify-center flex-shrink-0">
                   <Sparkles className="w-4 h-4 text-orange-400" />
                 </div>
                 <div className="flex-1">
-                  <div className="flex items-center gap-2 mb-1">
-                    <span className="text-xs font-black text-orange-400 tracking-wide">AI MEDIATOR</span>
-                  </div>
-                  <p className="text-sm text-slate-200 leading-relaxed">{currentSuggestion}</p>
+                  <span className="text-xs font-black text-orange-400 tracking-wide">SUGGERIMENTI AI</span>
                 </div>
                 <button
-                  onClick={() => setShowAISuggestion(false)}
+                  onClick={() => setShowAISuggestions(false)}
                   className="text-slate-500 hover:text-white transition-colors"
                 >
                   <X className="w-4 h-4" />
                 </button>
               </div>
-            </motion.div>
+              <div className="space-y-2 ml-11">
+                {aiSuggestions.map((suggestion, index) => (
+                  <button
+                    key={index}
+                    onClick={() => useSuggestion(suggestion.text)}
+                    className="w-full text-left p-3 rounded-xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-orange-500/50 transition-all group"
+                  >
+                    <div className="flex items-start gap-2">
+                      <Lightbulb className="w-4 h-4 text-orange-400 mt-0.5 flex-shrink-0" />
+                      <p className="text-sm text-slate-300 group-hover:text-white leading-relaxed">
+                        {suggestion.text}
+                      </p>
+                    </div>
+                  </button>
+                ))}
+              </div>
+            </div>
           )}
-        </AnimatePresence>
 
         <form onSubmit={handleSendMessage} className="p-6 border-t border-slate-800/50">
           <div className="flex gap-3">
+            <button
+              type="button"
+              onClick={fetchAISuggestions}
+              disabled={loadingSuggestions}
+              className="px-4 py-4 rounded-2xl bg-slate-800/50 hover:bg-slate-800 border border-slate-700/50 hover:border-orange-500/50 text-orange-400 transition-all disabled:opacity-50"
+              title="Ottieni suggerimenti AI"
+            >
+              {loadingSuggestions ? (
+                <div className="w-5 h-5 border-2 border-orange-600/30 border-t-orange-600 rounded-full animate-spin"></div>
+              ) : (
+                <Sparkles className="w-5 h-5" />
+              )}
+            </button>
             <input
               type="text"
               value={newMessage}
@@ -257,7 +285,7 @@ export function ChatInterface({ conversationId, otherPartyName, targetTitle, onC
             </button>
           </div>
         </form>
-      </motion.div>
-    </motion.div>
+      </div>
+    </div>
   );
 }

@@ -1,45 +1,69 @@
 import { useState, useEffect } from 'react';
-import { Target, Crosshair, MapPin, Euro, TrendingUp, CreditCard, LogOut, Send, BarChart3, Shield, SlidersHorizontal, Lock, Unlock, MessageCircle } from 'lucide-react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Logo } from './Logo';
+import { Target, Crosshair, MapPin, Euro, TrendingUp, CreditCard, LogOut, Send, BarChart3, Shield, SlidersHorizontal, Lock, Unlock, MessageCircle, AlertCircle, LogIn, ArrowLeft } from 'lucide-react';
+import Logo from './Logo';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
-import type { TargetWithProfile, Subscription, CategoryData } from '../lib/types';
+import type { TargetWithProfile, CategoryData } from '../lib/types';
 import { SendOfferModal } from './SendOfferModal';
 import { SubscriptionPlans } from './SubscriptionPlans';
 import { MarketIntelligence } from './MarketIntelligence';
 import { AdminPanel } from './AdminPanel';
 import { useIsAdmin } from '../hooks/useIsAdmin';
+import { useSubscription } from '../hooks/useSubscription';
 import { NotificationSystem } from './NotificationSystem';
 import { ChatInterface } from './ChatInterface';
 import { Footer } from './Footer';
 
-type ViewMode = 'feed' | 'subscriptions' | 'analytics' | 'admin';
+type ViewMode = 'feed' | 'conversations' | 'subscriptions' | 'analytics' | 'admin';
 
-export function SellerDashboard() {
+interface ConversationWithDetails {
+  id: string;
+  target_id: string;
+  buyer_id: string;
+  seller_id: string;
+  status: string;
+  created_at: string;
+  updated_at: string;
+  buyer: {
+    full_name: string;
+    city: string;
+  };
+  target: {
+    title: string;
+  };
+}
+
+interface SellerDashboardProps {
+  isGuest?: boolean;
+  onAuthRequired?: (role: 'buyer' | 'seller') => void;
+  onBack?: () => void;
+}
+
+export function SellerDashboard({ isGuest = false, onAuthRequired, onBack }: SellerDashboardProps = {}) {
   const { profile, signOut } = useAuth();
   const { isAdmin } = useIsAdmin();
+  const { subscription, dailyLimits, upgradePlan, checkCanSendOffers, incrementOffersSent } = useSubscription();
   const [targets, setTargets] = useState<TargetWithProfile[]>([]);
-  const [subscription, setSubscription] = useState<Subscription | null>(null);
   const [loading, setLoading] = useState(true);
   const [viewMode, setViewMode] = useState<ViewMode>('feed');
   const [selectedTarget, setSelectedTarget] = useState<TargetWithProfile | null>(null);
   const [categories, setCategories] = useState<CategoryData[]>([]);
   const [unlockedLeads, setUnlockedLeads] = useState<Set<string>>(new Set());
   const [selectedChat, setSelectedChat] = useState<{ conversationId: string; otherParty: string; target: string } | null>(null);
+  const [conversations, setConversations] = useState<ConversationWithDetails[]>([]);
   const [filters, setFilters] = useState({
     category: 'Tutte',
     location: '',
   });
 
   useEffect(() => {
-    if (profile) {
-      loadTargets();
-      loadSubscription();
-      loadCategories();
+    loadTargets();
+    loadCategories();
+    if (profile && !isGuest) {
       loadUnlockedLeads();
+      loadConversations();
     }
-  }, [profile]);
+  }, [profile, isGuest]);
 
   const loadCategories = async () => {
     const { data, error } = await supabase
@@ -73,21 +97,6 @@ export function SellerDashboard() {
     setLoading(false);
   };
 
-  const loadSubscription = async () => {
-    if (!profile) return;
-
-    const { data, error } = await supabase
-      .from('subscriptions')
-      .select('*')
-      .eq('user_id', profile.id)
-      .maybeSingle();
-
-    if (error) {
-      console.error('Error loading subscription:', error);
-    } else {
-      setSubscription(data);
-    }
-  };
 
   const loadUnlockedLeads = async () => {
     if (!profile) return;
@@ -101,6 +110,26 @@ export function SellerDashboard() {
       console.error('Error loading unlocked leads:', error);
     } else if (data) {
       setUnlockedLeads(new Set(data.map(ul => ul.target_id)));
+    }
+  };
+
+  const loadConversations = async () => {
+    if (!profile) return;
+
+    const { data, error } = await supabase
+      .from('conversations')
+      .select(`
+        *,
+        buyer:profiles!conversations_buyer_id_fkey(full_name, city),
+        target:targets(title)
+      `)
+      .eq('seller_id', profile.id)
+      .order('updated_at', { ascending: false });
+
+    if (error) {
+      console.error('Error loading conversations:', error);
+    } else {
+      setConversations(data || []);
     }
   };
 
@@ -134,111 +163,172 @@ export function SellerDashboard() {
   const canAccessAnalytics = subscription?.plan === 'enterprise';
 
   return (
-    <div className="min-h-screen bg-[#0f172a]">
-      <nav className="border-b border-slate-800/50 bg-[#0f172a]/90 backdrop-blur-xl sticky top-0 z-50">
+    <div className="min-h-screen bg-gray-200">
+      <nav className="border-b border-slate-200 bg-white/90 backdrop-blur-xl sticky top-0 z-50 shadow-sm">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <Logo size={44} />
+            {onBack && (
+              <button
+                onClick={onBack}
+                className="p-2 rounded-xl bg-gray-100 text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-colors border border-slate-200 hover:scale-105 active:scale-95"
+              >
+                <ArrowLeft className="w-5 h-5" />
+              </button>
+            )}
+            <Logo size={44} showText={false} blackBg={false} />
             <div>
-              <h1 className="text-xl font-black text-white tracking-tight italic">MY TARGET</h1>
-              <p className="text-xs text-orange-500 font-medium">Dashboard Business Hunter</p>
+              <h1 className="text-xl font-black text-slate-900 tracking-tight italic">MY TARGET</h1>
+              <p className="text-xs text-orange-600 font-medium">
+                {isGuest ? 'Modalità Ospite' : 'Dashboard Business Hunter'}
+              </p>
             </div>
           </div>
           <div className="flex items-center gap-4">
-            <div className="text-right">
-              <p className="text-sm font-bold text-white">{profile?.full_name}</p>
-              <p className="text-xs text-orange-400 font-bold">
-                {subscription?.plan ? subscription.plan.toUpperCase() : 'FREE'}
-              </p>
-            </div>
-            <div className="relative">
-              <NotificationSystem />
-            </div>
-            <button
-              onClick={() => signOut()}
-              className="p-3 rounded-2xl bg-slate-800/50 text-slate-400 hover:text-orange-500 hover:bg-slate-800 transition-colors border border-slate-700/50"
-            >
-              <LogOut className="w-5 h-5" />
-            </button>
+            {isGuest ? (
+              <button
+                onClick={() => onAuthRequired?.('seller')}
+                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg hover:scale-105 active:scale-95"
+              >
+                <LogIn className="w-5 h-5" />
+                Accedi o Registrati
+              </button>
+            ) : (
+              <>
+                <div className="text-right">
+                  <p className="text-sm font-bold text-slate-900">{profile?.full_name}</p>
+                  <p className="text-xs text-orange-600 font-bold">
+                    {subscription?.plan ? subscription.plan.toUpperCase() : 'FREE'}
+                  </p>
+                </div>
+                <div className="relative">
+                  <NotificationSystem />
+                </div>
+                <button
+                  onClick={() => signOut()}
+                  className="p-3 rounded-2xl bg-gray-100 text-slate-600 hover:text-orange-600 hover:bg-orange-50 transition-colors border border-slate-200 hover:scale-105 active:scale-95"
+                >
+                  <LogOut className="w-5 h-5" />
+                </button>
+              </>
+            )}
           </div>
         </div>
       </nav>
 
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="bg-gradient-to-r from-orange-600/10 to-transparent p-6 rounded-3xl border border-orange-600/20 mb-8">
-          <div className="flex items-center gap-3 mb-2">
-            <Crosshair className="w-8 h-8 text-orange-500" />
-            <h2 className="text-3xl font-black text-white">Feed Target</h2>
+        {!isGuest && dailyLimits && dailyLimits.plan === 'free' && (
+          <div className="bg-slate-900/50 border border-slate-800 rounded-2xl p-4 mb-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center gap-3">
+                <AlertCircle className="w-5 h-5 text-orange-500" />
+                <span className="text-sm font-semibold text-white">Limiti Piano FREE</span>
+              </div>
+              <div className="flex items-center gap-6">
+                <div className="text-right">
+                  <p className="text-xs text-slate-400">Offerte Questo Mese</p>
+                  <p className="text-sm font-bold text-white">
+                    {dailyLimits.offers_sent} / {dailyLimits.offers_limit}
+                  </p>
+                </div>
+                <button
+                  onClick={() => setViewMode('subscriptions')}
+                  className="px-4 py-2 rounded-xl bg-gradient-to-r from-orange-600 to-orange-500 text-white text-sm font-bold hover:from-orange-500 hover:to-orange-400 transition-all"
+                >
+                  Upgrade
+                </button>
+              </div>
+            </div>
           </div>
-          <p className="text-slate-400">
+        )}
+
+        <div className="bg-gradient-to-r from-blue-50 to-blue-100/50 p-6 rounded-3xl border border-blue-300 mb-8 shadow-sm transition-all duration-300">
+          <div className="flex items-center gap-3 mb-2">
+            <Crosshair className="w-8 h-8 text-blue-600" />
+            <h2 className="text-3xl font-black text-slate-900">Feed Target</h2>
+          </div>
+          <p className="text-slate-700">
             Trova lead caldi prima della concorrenza. Prevedi la domanda e colpisci al momento giusto.
           </p>
         </div>
 
-        <div className="flex gap-4 mb-6 border-b border-slate-800/50">
-          <button
-            onClick={() => setViewMode('feed')}
-            className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
-              viewMode === 'feed' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <Target className="w-4 h-4" />
-            Target Disponibili
-            {viewMode === 'feed' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
-            )}
-          </button>
-          <button
-            onClick={() => setViewMode('subscriptions')}
-            className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
-              viewMode === 'subscriptions' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
-            }`}
-          >
-            <CreditCard className="w-4 h-4" />
-            Piano
-            {viewMode === 'subscriptions' && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
-            )}
-          </button>
-          <button
-            onClick={() => setViewMode('analytics')}
-            disabled={!canAccessAnalytics}
-            className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
-              viewMode === 'analytics'
-                ? 'text-orange-500'
-                : canAccessAnalytics
-                ? 'text-slate-400 hover:text-white'
-                : 'text-slate-600 cursor-not-allowed'
-            }`}
-          >
-            <BarChart3 className="w-4 h-4" />
-            Intelligence
-            {!canAccessAnalytics && (
-              <span className="text-xs bg-orange-600/20 text-orange-400 px-2 py-1 rounded-full font-bold">
-                Enterprise
-              </span>
-            )}
-            {viewMode === 'analytics' && canAccessAnalytics && (
-              <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
-            )}
-          </button>
-          {isAdmin && (
+        {!isGuest && (
+          <div className="flex gap-4 mb-6 border-b border-slate-800/50">
             <button
-              onClick={() => setViewMode('admin')}
+              onClick={() => setViewMode('feed')}
               className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
-                viewMode === 'admin' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
+                viewMode === 'feed' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
               }`}
             >
-              <Shield className="w-4 h-4" />
-              Admin
-              {viewMode === 'admin' && (
+              <Target className="w-4 h-4" />
+              Target Disponibili
+              {viewMode === 'feed' && (
                 <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
               )}
             </button>
-          )}
-        </div>
+            <button
+              onClick={() => setViewMode('conversations')}
+              className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
+                viewMode === 'conversations' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <MessageCircle className="w-4 h-4" />
+              Conversazioni ({conversations.length})
+              {viewMode === 'conversations' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setViewMode('subscriptions')}
+              className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
+                viewMode === 'subscriptions' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
+              }`}
+            >
+              <CreditCard className="w-4 h-4" />
+              Piano
+              {viewMode === 'subscriptions' && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
+              )}
+            </button>
+            <button
+              onClick={() => setViewMode('analytics')}
+              disabled={!canAccessAnalytics}
+              className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
+                viewMode === 'analytics'
+                  ? 'text-orange-500'
+                  : canAccessAnalytics
+                  ? 'text-slate-400 hover:text-white'
+                  : 'text-slate-600 cursor-not-allowed'
+              }`}
+            >
+              <BarChart3 className="w-4 h-4" />
+              Intelligence
+              {!canAccessAnalytics && (
+                <span className="text-xs bg-orange-600/20 text-orange-400 px-2 py-1 rounded-full font-bold">
+                  Enterprise
+                </span>
+              )}
+              {viewMode === 'analytics' && canAccessAnalytics && (
+                <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
+              )}
+            </button>
+            {isAdmin && (
+              <button
+                onClick={() => setViewMode('admin')}
+                className={`px-6 py-4 font-bold transition-all relative flex items-center gap-2 ${
+                  viewMode === 'admin' ? 'text-orange-500' : 'text-slate-400 hover:text-white'
+                }`}
+              >
+                <Shield className="w-4 h-4" />
+                Admin
+                {viewMode === 'admin' && (
+                  <div className="absolute bottom-0 left-0 right-0 h-1 bg-gradient-to-r from-orange-600 to-orange-500 rounded-t-full" />
+                )}
+              </button>
+            )}
+          </div>
+        )}
 
-        {viewMode === 'feed' && (
+        {(isGuest || viewMode === 'feed') && (
           <>
             <div className="bg-slate-900/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 mb-8">
               <div className="flex items-center gap-4 mb-6">
@@ -366,28 +456,32 @@ export function SellerDashboard() {
                               {new Date(target.created_at).toLocaleDateString('it-IT')}
                             </span>
                           </div>
-                          {unlockedLeads.has(target.id) ? (
+                          {isGuest ? (
+                            <button
+                              onClick={() => onAuthRequired?.('seller')}
+                              className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95"
+                            >
+                              <LogIn className="w-5 h-5" />
+                              Registrati per Inviare Offerta
+                            </button>
+                          ) : unlockedLeads.has(target.id) ? (
                             <div className="flex gap-2">
-                              <motion.button
-                                whileHover={{ scale: 1.05 }}
-                                whileTap={{ scale: 0.95 }}
+                              <button
                                 onClick={() => setSelectedTarget(target)}
-                                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30"
+                                className="flex items-center gap-2 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30 hover:scale-105 active:scale-95"
                               >
                                 <Send className="w-5 h-5" />
                                 Invia Offerta
-                              </motion.button>
+                              </button>
                             </div>
                           ) : (
-                            <motion.button
-                              whileHover={{ scale: 1.05 }}
-                              whileTap={{ scale: 0.95 }}
+                            <button
                               onClick={() => handleUnlockLead(target.id)}
-                              className="flex items-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-slate-700 to-slate-600 border-2 border-orange-600/50 text-white font-bold hover:from-slate-600 hover:to-slate-500 transition-all"
+                              className="flex items-center gap-2 px-8 py-3 rounded-2xl bg-gradient-to-r from-slate-700 to-slate-600 border-2 border-orange-600/50 text-white font-bold hover:from-slate-600 hover:to-slate-500 transition-all hover:scale-105 active:scale-95"
                             >
                               <Unlock className="w-5 h-5 text-orange-500" />
                               Sblocca Lead
-                            </motion.button>
+                            </button>
                           )}
                         </div>
                       </div>
@@ -400,19 +494,96 @@ export function SellerDashboard() {
           </>
         )}
 
-        {viewMode === 'subscriptions' && (
+        {!isGuest && viewMode === 'conversations' && (
+          <div className="grid gap-6">
+            {conversations.length === 0 ? (
+              <div className="text-center py-16 bg-slate-900/50 backdrop-blur-xl rounded-3xl border border-slate-800">
+                <MessageCircle className="w-20 h-20 text-slate-600 mx-auto mb-6" />
+                <p className="text-slate-300 text-xl font-bold mb-2">Nessuna conversazione</p>
+                <p className="text-slate-500 text-sm">
+                  Le conversazioni con i buyers appariranno qui quando avvieranno la chat
+                </p>
+              </div>
+            ) : (
+              conversations.map((conversation) => (
+                <div
+                  key={conversation.id}
+                  className="group bg-slate-900/50 backdrop-blur-xl p-8 rounded-3xl border border-slate-800 hover:border-orange-600/50 transition-all hover:bg-slate-900/70 hover:scale-[1.01] cursor-pointer"
+                  onClick={() => {
+                    setSelectedChat({
+                      conversationId: conversation.id,
+                      otherParty: conversation.buyer.full_name,
+                      target: conversation.target.title
+                    });
+                  }}
+                >
+                  <div className="flex items-start justify-between">
+                    <div className="flex-1">
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-2xl bg-orange-600/20 flex items-center justify-center">
+                          <MessageCircle className="w-6 h-6 text-orange-500" />
+                        </div>
+                        <div>
+                          <h3 className="text-xl font-black text-white group-hover:text-orange-500 transition-colors">
+                            {conversation.buyer.full_name}
+                          </h3>
+                          <p className="text-sm text-slate-400">
+                            {conversation.buyer.city}
+                          </p>
+                        </div>
+                      </div>
+                      <div className="bg-slate-800/30 p-4 rounded-2xl border border-slate-700/50 mb-4">
+                        <p className="text-sm text-slate-300 mb-1">
+                          <span className="text-slate-500">Target:</span> {conversation.target.title}
+                        </p>
+                      </div>
+                      <div className="flex items-center justify-between text-sm">
+                        <span className="text-slate-500">
+                          Ultima attività: {new Date(conversation.updated_at).toLocaleDateString('it-IT')}
+                        </span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-bold ${
+                          conversation.status === 'active'
+                            ? 'bg-green-600/20 text-green-400 border border-green-500/50'
+                            : 'bg-slate-700/50 text-slate-400 border border-slate-600'
+                        }`}>
+                          {conversation.status === 'active' ? 'Attiva' : conversation.status === 'archived' ? 'Archiviata' : 'Chiusa'}
+                        </span>
+                      </div>
+                    </div>
+                    <button
+                      onClick={(e) => {
+                        e.stopPropagation();
+                        setSelectedChat({
+                          conversationId: conversation.id,
+                          otherParty: conversation.buyer.full_name,
+                          target: conversation.target.title
+                        });
+                      }}
+                      className="ml-4 px-6 py-3 rounded-2xl bg-gradient-to-r from-orange-600 to-orange-500 text-white font-bold hover:from-orange-500 hover:to-orange-400 transition-all shadow-lg shadow-orange-600/30 flex items-center gap-2"
+                    >
+                      <MessageCircle className="w-5 h-5" />
+                      Apri Chat
+                    </button>
+                  </div>
+                </div>
+              ))
+            )}
+          </div>
+        )}
+
+        {!isGuest && viewMode === 'subscriptions' && (
           <SubscriptionPlans
             currentPlan={subscription?.plan || 'free'}
-            onUpgrade={loadSubscription}
+            onUpgrade={upgradePlan}
           />
         )}
 
-        {viewMode === 'analytics' && canAccessAnalytics && <MarketIntelligence />}
+        {!isGuest && viewMode === 'analytics' && canAccessAnalytics && <MarketIntelligence />}
 
-        {viewMode === 'admin' && isAdmin && <AdminPanel />}
+        {!isGuest && viewMode === 'admin' && isAdmin && <AdminPanel />}
       </div>
 
-      {selectedTarget && (
+      {!isGuest && selectedTarget && (
         <SendOfferModal
           target={selectedTarget}
           onClose={() => setSelectedTarget(null)}

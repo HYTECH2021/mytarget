@@ -1,5 +1,4 @@
 import { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
 import { Bell, MessageCircle, Target, TrendingUp, X } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { supabase } from '../lib/supabase';
@@ -109,49 +108,27 @@ export function NotificationSystem() {
 
   return (
     <>
-      <motion.button
-        whileHover={{ scale: 1.05 }}
-        whileTap={{ scale: 0.95 }}
+      <button
         onClick={() => setShowPanel(!showPanel)}
-        className="relative p-3 rounded-2xl bg-slate-800/50 hover:bg-slate-800 text-slate-400 hover:text-orange-500 transition-all border border-slate-700/50"
+        className="relative p-3 rounded-2xl bg-orange-100 hover:bg-orange-200 text-orange-600 hover:text-orange-700 transition-all border border-orange-300 hover:scale-105 active:scale-95"
       >
         <Bell className="w-5 h-5" />
-        <AnimatePresence>
-          {unreadCount > 0 && (
-            <motion.div
-              initial={{ scale: 0 }}
-              animate={{ scale: 1 }}
-              exit={{ scale: 0 }}
-              className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-orange-600 to-orange-500 rounded-full flex items-center justify-center"
-            >
-              <motion.span
-                animate={{ scale: [1, 1.2, 1] }}
-                transition={{ repeat: Infinity, duration: 2 }}
-                className="text-xs font-black text-white"
-              >
-                {unreadCount > 9 ? '9+' : unreadCount}
-              </motion.span>
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </motion.button>
+        {unreadCount > 0 && (
+          <div className="absolute -top-1 -right-1 w-6 h-6 bg-gradient-to-r from-orange-600 to-orange-500 rounded-full flex items-center justify-center animate-pulse">
+            <span className="text-xs font-black text-white">
+              {unreadCount > 9 ? '9+' : unreadCount}
+            </span>
+          </div>
+        )}
+      </button>
 
-      <AnimatePresence>
-        {showPanel && (
-          <>
-            <motion.div
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              onClick={() => setShowPanel(false)}
-              className="fixed inset-0 z-40"
-            />
-            <motion.div
-              initial={{ opacity: 0, y: -20, scale: 0.95 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: -20, scale: 0.95 }}
-              className="absolute right-0 top-full mt-2 w-96 bg-slate-900 border border-orange-600/30 rounded-3xl shadow-2xl shadow-orange-600/20 overflow-hidden z-50"
-            >
+      {showPanel && (
+        <>
+          <div
+            onClick={() => setShowPanel(false)}
+            className="fixed inset-0 z-40 transition-opacity duration-200"
+          />
+          <div className="absolute right-0 top-full mt-2 w-96 bg-slate-900 border border-orange-600/30 rounded-3xl shadow-2xl shadow-orange-600/20 overflow-hidden z-50 transition-all duration-300">
               <div className="bg-gradient-to-r from-orange-600/20 to-orange-500/10 border-b border-orange-600/30 p-4 flex items-center justify-between">
                 <div className="flex items-center gap-3">
                   <div className="w-10 h-10 rounded-xl bg-orange-600/30 flex items-center justify-center">
@@ -180,11 +157,9 @@ export function NotificationSystem() {
                   </div>
                 ) : (
                   notifications.map((notification) => (
-                    <motion.div
+                    <div
                       key={notification.id}
-                      initial={{ opacity: 0, x: -20 }}
-                      animate={{ opacity: 1, x: 0 }}
-                      className={`p-4 border-b border-slate-800/50 hover:bg-slate-800/30 transition-colors cursor-pointer ${
+                      className={`p-4 border-b border-slate-800/50 hover:bg-slate-800/30 transition-all duration-300 cursor-pointer ${
                         !notification.read ? 'bg-orange-600/5' : ''
                       }`}
                       onClick={() => markAsRead(notification.id)}
@@ -215,14 +190,13 @@ export function NotificationSystem() {
                           </p>
                         </div>
                       </div>
-                    </motion.div>
+                    </div>
                   ))
                 )}
               </div>
-            </motion.div>
+            </div>
           </>
         )}
-      </AnimatePresence>
     </>
   );
 }

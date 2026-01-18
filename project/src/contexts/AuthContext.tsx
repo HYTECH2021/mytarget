@@ -1,5 +1,5 @@
 import { createContext, useContext, useEffect, useState, type ReactNode } from 'react';
-import { supabase } from '../lib/supabase';
+import { supabase, hasValidConfig } from '../lib/supabase';
 import type { Profile, UserRole } from '../lib/types';
 import type { User } from '@supabase/supabase-js';
 
@@ -7,6 +7,7 @@ interface AuthContextType {
   user: User | null;
   profile: Profile | null;
   loading: boolean;
+  error: string | null;
   signUp: (email: string, password: string, profileData: {
     full_name: string;
     city: string;
@@ -16,6 +17,7 @@ interface AuthContextType {
     gender?: string;
     age_range?: string;
     // Seller fields
+    seller_type?: 'business' | 'individual';
     business_name?: string;
     vat_number?: string;
     primary_sector?: string;
@@ -31,6 +33,15 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<User | null>(null);
   const [profile, setProfile] = useState<Profile | null>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+
+  useEffect(() => {
+    if (!hasValidConfig) {
+      setError('Configurazione non valida. Contatta il supporto.');
+      setLoading(false);
+      return;
+    }
+  }, []);
 
   const fetchProfile = async (userId: string) => {
     const { data, error } = await supabase
@@ -87,6 +98,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       gender?: string;
       age_range?: string;
       // Seller fields
+      seller_type?: 'business' | 'individual';
       business_name?: string;
       vat_number?: string;
       primary_sector?: string;
@@ -96,6 +108,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
       const { data, error: signUpError } = await supabase.auth.signUp({
         email,
         password,
+        options: {
+          emailRedirectTo: `${window.location.origin}/`,
+          data: {
+            full_name: profileData.full_name,
+            role: profileData.role,
+          }
+        }
       });
 
       if (signUpError) throw signUpError;
@@ -148,6 +167,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         user,
         profile,
         loading,
+        error,
         signUp,
         signIn,
         signOut,

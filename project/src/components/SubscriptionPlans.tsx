@@ -1,9 +1,10 @@
-import { Check, Sparkles } from 'lucide-react';
+import { useState } from 'react';
+import { Check, Sparkles, Loader2 } from 'lucide-react';
 import type { SubscriptionPlan } from '../lib/types';
 
 interface SubscriptionPlansProps {
   currentPlan: SubscriptionPlan;
-  onUpgrade: () => void;
+  onUpgrade: (plan: SubscriptionPlan) => Promise<{ success: boolean; error?: string }>;
 }
 
 const plans = [
@@ -13,8 +14,8 @@ const plans = [
     price: '0',
     description: 'Perfetto per iniziare',
     features: [
-      'Visualizza fino a 10 richieste al giorno',
-      'Invia fino a 3 offerte al giorno',
+      'Visualizza fino a 30 richieste al mese',
+      'Invia fino a 10 offerte al mese',
       'Supporto via email',
       'Profilo base',
     ],
@@ -55,6 +56,25 @@ const plans = [
 ] as const;
 
 export function SubscriptionPlans({ currentPlan, onUpgrade }: SubscriptionPlansProps) {
+  const [upgradingPlan, setUpgradingPlan] = useState<string | null>(null);
+
+  const handleUpgrade = async (planName: string) => {
+    setUpgradingPlan(planName);
+    try {
+      const result = await onUpgrade(planName as SubscriptionPlan);
+      if (result.success) {
+        alert(`Piano aggiornato a ${planName.toUpperCase()} con successo!`);
+      } else {
+        alert(`Errore durante l'upgrade: ${result.error || 'Errore sconosciuto'}`);
+      }
+    } catch (error) {
+      console.error('Error upgrading plan:', error);
+      alert('Errore durante l\'aggiornamento del piano');
+    } finally {
+      setUpgradingPlan(null);
+    }
+  };
+
   return (
     <div>
       <div className="text-center mb-12">
@@ -125,14 +145,17 @@ export function SubscriptionPlans({ currentPlan, onUpgrade }: SubscriptionPlansP
               </ul>
 
               <button
-                onClick={onUpgrade}
-                disabled={isCurrentPlan}
-                className={`w-full py-3 rounded-2xl font-semibold transition-all ${
+                onClick={() => handleUpgrade(plan.name)}
+                disabled={isCurrentPlan || upgradingPlan !== null}
+                className={`w-full py-3 rounded-2xl font-semibold transition-all flex items-center justify-center gap-2 ${
                   isCurrentPlan
                     ? 'bg-slate-700 text-slate-400 cursor-not-allowed'
-                    : `${bgColor} text-white hover:opacity-90`
+                    : `${bgColor} text-white hover:opacity-90 ${upgradingPlan === plan.name ? 'opacity-70' : ''}`
                 }`}
               >
+                {upgradingPlan === plan.name && (
+                  <Loader2 className="w-5 h-5 animate-spin" />
+                )}
                 {isCurrentPlan ? 'Piano Corrente' : 'Passa a ' + plan.displayName}
               </button>
             </div>
@@ -147,9 +170,12 @@ export function SubscriptionPlans({ currentPlan, onUpgrade }: SubscriptionPlansP
         <p className="text-slate-300 mb-6">
           Contattaci per un piano su misura per le esigenze della tua azienda
         </p>
-        <button className="px-8 py-3 rounded-2xl bg-white text-slate-950 font-semibold hover:bg-slate-100 transition-all">
+        <a
+          href="mailto:sales@mytarget.ai?subject=Richiesta Piano Enterprise Personalizzato"
+          className="inline-block px-8 py-3 rounded-2xl bg-white text-slate-950 font-semibold hover:bg-slate-100 transition-all"
+        >
           Contatta il Reparto Vendite
-        </button>
+        </a>
       </div>
     </div>
   );
